@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f0e9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0f0d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plate">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Plate</title>
+<style>
+:root{
+  --bg:#f4f0e9; --card:#ffffff; --ink:#1b1a17; --muted:#77736a; --line:#e8e2d7; --soft:#f1ece3;
+  --accent:#1f7a4d; --accent-ink:#ffffff; --accent-soft:#e1f0e7;
+  --warn:#c4571a; --warn-soft:#fbe8dc;
+  --p:#4a6cf7; --c:#e3a008; --f:#e5574b;
+  --shadow:0 1px 2px rgba(20,18,10,.05),0 10px 30px rgba(20,18,10,.07);
+  --scrim:rgba(20,18,10,.45);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0f0d; --card:#181a17; --ink:#f3f0e8; --muted:#9b978c; --line:#2a2c27; --soft:#22241f;
+    --accent:#4cc487; --accent-ink:#06210f; --accent-soft:#17301f;
+    --warn:#f08c52; --warn-soft:#33200f;
+    --p:#7b94ff; --c:#f0b72f; --f:#ff7a6e;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    --scrim:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0f0d; --card:#181a17; --ink:#f3f0e8; --muted:#9b978c; --line:#2a2c27; --soft:#22241f;
+  --accent:#4cc487; --accent-ink:#06210f; --accent-soft:#17301f;
+  --warn:#f08c52; --warn-soft:#33200f;
+  --p:#7b94ff; --c:#f0b72f; --f:#ff7a6e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  --scrim:rgba(0,0,0,.6);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body.noscroll{overflow:hidden}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+.vh{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+.wrap{max-width:560px;margin:0 auto;padding:14px 16px 150px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 0 12px}
+.eyebrow{font-size:13px;color:var(--muted);letter-spacing:.02em}
+h1{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.02em}
+.icon-btn{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--muted);background:var(--card);border:1px solid var(--line)}
+.tabs{display:flex;background:var(--soft);border-radius:14px;padding:3px;margin-bottom:14px}
+.tabs button{flex:1;height:36px;border-radius:11px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.banner{background:var(--warn-soft);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.lnk{font-weight:700;text-decoration:underline;white-space:nowrap}
+
+/* hero ring */
+.hero{display:flex;align-items:center;gap:16px;padding:16px}
+.ring{position:relative;width:148px;height:148px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.ring .trk{stroke:var(--soft)}
+.ring .prg{stroke:var(--accent);transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)}
+.ring.over .prg{stroke:var(--warn)}
+.ctr{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ctr b{font-size:34px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ctr span{font-size:12px;color:var(--muted);margin-top:4px}
+.mac{flex:1;min-width:0;display:grid;gap:11px}
+.pill{justify-self:start;font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.over{background:var(--warn-soft);color:var(--warn)}
+.mrow .mh{display:flex;justify-content:space-between;font-size:13px}
+.mrow .mh span{color:var(--muted)}
+.bar-t{height:6px;background:var(--soft);border-radius:6px;margin-top:5px;overflow:hidden}
+@media (max-width:360px){.hero{gap:12px;padding:14px}.ring{width:118px;height:118px}.ctr b{font-size:28px}.mrow .mh{font-size:12px;gap:6px}.pill{font-size:12px}}
+.bar-t i{display:block;height:100%;border-radius:6px}
+
+/* sections + meals */
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:22px 4px 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.meal{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px 10px 10px;margin-bottom:10px}
+.meal.flat{border:0;box-shadow:none;border-radius:0;margin:0;border-top:1px solid var(--line);background:none}
+.thumb{width:56px;height:56px;border-radius:14px;object-fit:cover;background:var(--soft);flex:none;display:grid;place-items:center;color:var(--muted)}
+.thumb.big{width:64px;height:64px;border-radius:16px}
+.thumb.sm{width:34px;height:34px;border-radius:10px}
+.thumb.sm svg{width:20px;height:20px}
+.mm{flex:1;min-width:0;display:grid;gap:3px}
+.mname{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mmeta{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.mk{text-align:right;flex:none}
+.mk b{font-size:21px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk small{display:block;font-size:11px;color:var(--muted);margin-top:-2px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--muted);flex:none}
+.dot.high{background:var(--accent)} .dot.medium{background:var(--c)} .dot.low{background:var(--warn)}
+.fresh{animation:pop .5s cubic-bezier(.2,.9,.3,1.2),glow 2.8s ease-out}
+@keyframes pop{from{transform:translateY(8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+@keyframes glow{0%,60%{border-color:var(--accent)}100%{border-color:var(--line)}}
+
+/* log again + nudge */
+.rec{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rec::-webkit-scrollbar{display:none}
+.rc{flex:none;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 12px 6px 6px;max-width:230px;text-align:left;box-shadow:var(--shadow)}
+.rc .rt{display:grid;min-width:0}
+.rc b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.rc small{font-size:11.5px;color:var(--muted)}
+.nudge{padding:14px;margin-top:10px;display:grid;gap:4px}
+.nudge span{font-size:13px;color:var(--muted)}
+.nudge .acts{display:flex;gap:8px;margin-top:8px}
+
+/* busy + fail */
+.busy,.fail{display:flex;gap:12px;align-items:center;padding:12px;margin-bottom:12px}
+.fail{align-items:flex-start;border-color:var(--warn)}
+.bimg{position:relative;width:72px;height:72px;border-radius:16px;overflow:hidden;background:var(--soft);flex:none;display:grid;place-items:center;color:var(--muted)}
+.bimg img{width:100%;height:100%;object-fit:cover;display:block}
+.shim{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);background-size:200% 100%;animation:shim 1.4s linear infinite}
+@keyframes shim{from{background-position:200% 0}to{background-position:-200% 0}}
+.btxt{flex:1;min-width:0;display:grid;gap:2px}
+.btxt span{font-size:12.5px;color:var(--muted)}
+.btn{height:40px;padding:0 14px;border-radius:12px;font-weight:600;font-size:14px;background:var(--soft);display:inline-flex;align-items:center;justify-content:center}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.dng{color:var(--warn)}
+.btn.wide{width:100%;margin-top:14px}
+.btn:disabled{opacity:.5}
+.fail .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* empty */
+.empty{text-align:center;padding:28px 18px;color:var(--muted);margin-top:14px}
+.empty h3{color:var(--ink);margin:10px 0 4px;font-size:18px}
+.empty p{margin:0}
+.tips{text-align:left;margin:16px auto 0;max-width:340px;font-size:13.5px;display:grid;gap:8px}
+.tips div{display:flex;gap:10px}
+.tips i{font-style:normal;flex:none}
+
+/* dock */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:26px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 60%,transparent);pointer-events:none}
+.dockin{max-width:560px;margin:0 auto;display:flex;gap:10px;align-items:center;pointer-events:auto}
+.dock .sec{width:56px;height:56px;border-radius:18px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;box-shadow:var(--shadow);flex:none}
+.snap{flex:1;height:56px;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(31,122,77,.35)}
+.dock button:disabled{opacity:.45}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;opacity:0;animation:fade .2s forwards}
+.scrim.still{animation:none;opacity:1}
+@keyframes fade{to{opacity:1}}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:560px;margin:0 auto;max-height:90%;overflow:auto;overscroll-behavior:contain;background:var(--card);border-radius:24px 24px 0 0;padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:up .28s cubic-bezier(.2,.9,.3,1)}
+.sheet.still{animation:none}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 12px}
+.sh-head{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.sh-title{flex:1;min-width:0}
+h2{margin:0;font-size:19px;line-height:1.2}
+.sh-sub{font-size:13px;color:var(--muted)}
+.x{width:36px;height:36px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none;color:var(--muted)}
+.bigk{display:flex;align-items:baseline;gap:6px;margin:6px 0 2px}
+.bigk b{font-size:52px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.bigk span{color:var(--muted);font-weight:600}
+.rng{font-size:13.5px;color:var(--muted)}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin:16px 0 6px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-width:0;height:40px;border-radius:12px;background:var(--soft);font-weight:600;font-size:14px;white-space:nowrap;padding:0 4px}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+@media (max-width:400px){.seg button{font-size:13px}}
+@media (max-width:340px){.seg button{font-size:12px;padding:0 2px}.acts2 .btn{font-size:14px;padding:0 6px}}
+.chips{display:flex;gap:8px;margin-top:12px}
+.chip{flex:1;background:var(--soft);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--muted)}
+.chip b{display:block;font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.items{margin-top:8px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.it{display:flex;gap:10px;align-items:center;padding:8px 10px 8px 12px;font-size:14px;border-top:1px solid var(--line)}
+.it:first-child{border-top:0}
+.it .n{flex:1;min-width:0;line-height:1.25}
+.it .n small{display:block;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;margin-top:1px}
+.it .k{width:44px;text-align:right;font-weight:650;font-variant-numeric:tabular-nums}
+.it.off .n,.it.off .k{opacity:.45}
+.it.off .n{text-decoration:line-through}
+.stp{display:flex;gap:6px;flex:none}
+.stp button{width:34px;height:34px;border-radius:11px;background:var(--soft);font-size:19px;font-weight:700;line-height:1;display:grid;place-items:center}
+.stp button:active{background:var(--line)}
+.why{font-size:13.5px;color:var(--muted);margin-top:10px;line-height:1.45}
+.fix{display:flex;gap:8px}
+.qf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.qf button{height:32px;padding:0 12px;border-radius:999px;background:var(--soft);font-size:13px;font-weight:600}
+input[type=text],input[type=number],input[type=password],input[type=datetime-local],textarea{width:100%;background:var(--soft);border:1px solid transparent;border-radius:12px;padding:11px 12px;font-size:16px;min-height:44px;outline:0;-webkit-appearance:none;appearance:none}
+textarea{resize:none}
+input:focus,textarea:focus{border-color:var(--accent)}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-top:12px}
+label>input,label>textarea{margin-top:5px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.acts2{display:flex;gap:10px;margin-top:18px}
+.acts2 .btn{flex:1;height:46px}
+.hint{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.45}
+.err{font-size:13px;color:var(--warn);margin-top:8px}
+details{margin-top:12px} summary{font-size:13px;color:var(--muted);cursor:pointer}
+.pthumb{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px}
+.swrow b{font-size:15px}
+.sw{width:52px;height:32px;border-radius:32px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.sw.on{background:var(--accent)}
+.sw.on i{transform:translateX(20px)}
+
+/* toast */
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:max-content;max-width:calc(100% - 32px);bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateY(20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:11px 14px;border-radius:14px;font-size:14px;display:flex;gap:14px;align-items:center;z-index:60;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.toast span{min-width:0}
+body.noscroll .toast{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));transform:translateY(-20px)}
+body.noscroll .toast.show{transform:translateY(0)}
+.toast button{font-weight:700;text-decoration:underline;flex:none;white-space:nowrap}
+
+/* history */
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sum .card{padding:12px}
+.sum b{display:block;font-size:22px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sum span{font-size:12px;color:var(--muted)}
+.chart{padding:12px 12px 6px;margin-bottom:12px}
+.chart svg{width:100%;height:auto;display:block}
+.bar{fill:var(--accent);opacity:.72}
+.bar.today{opacity:1}
+.bar.over{fill:var(--warn)}
+.bar.pr{fill:var(--p);opacity:.5}
+.bar.pr.today{opacity:.8}
+.bar.pr.hit{opacity:1}
+.bar.empty{fill:var(--line);opacity:1}
+.goal{stroke:var(--muted);stroke-dasharray:3 4;stroke-width:1}
+.ax,.gl{fill:var(--muted);font-size:10px}
+.dayc{margin-bottom:10px;overflow:hidden}
+.day{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 14px;text-align:left}
+.day small{display:block;font-size:12px;color:var(--muted)}
+.day .dk{text-align:right}
+.day .dk b{font-size:19px;font-variant-numeric:tabular-nums}
+.day .dk.over small{color:var(--warn)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="eyebrow" id="dateLabel"></div><h1 id="title">Today</h1></div>
+    <button class="icon-btn" id="btnSettings" data-act="settings" aria-label="Settings"></button>
+  </header>
+  <nav class="tabs">
+    <button data-act="tab" data-tab="today" class="on">Today</button>
+    <button data-act="tab" data-tab="history">History</button>
+  </nav>
+  <main id="view"></main>
+</div>
+
+<div class="dock"><div class="dockin">
+  <button class="sec" id="btnLib" data-act="lib" aria-label="Choose a photo from your library"></button>
+  <button class="snap" id="btnSnap" data-act="snap"></button>
+  <button class="sec" id="btnManual" data-act="manual" aria-label="Log a meal without a photo"></button>
+</div></div>
+
+<div id="sheetHost"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input class="vh" id="fileCam" type="file" accept="image/*" capture="environment" tabindex="-1">
+<input class="vh" id="fileLib" type="file" accept="image/*" tabindex="-1">
+
+<script>
+/* Plate standalone runtime.
+   Gives the app the same window.claude surface it gets inside Claude:
+     sample    -> Anthropic Messages API, called straight from this device with your own API key
+     db        -> IndexedDB on this device (in-memory mirror, write-through)
+     user      -> a fixed local id
+     downloads -> iOS share sheet, falling back to a normal file download
+   Nothing here talks to any server except api.anthropic.com. */
+(function () {
+'use strict';
+
+var LS = {
+  get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+var KEY_K = 'plate.apiKey', MODELS_K = 'plate.models', HINT_K = 'plate.installHint';
+var UID = 'local';
+var API = 'https://api.anthropic.com/v1/messages';
+var DEFAULT_MODELS = {std: 'claude-sonnet-5-5', max: 'claude-opus-5-5'};
+var EFFORT = {std: 'medium', max: 'high'};
+var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+
+/* ---------- settings kept outside the log (never exported in backups) ---------- */
+function getKey() { return (LS.get(KEY_K) || '').trim(); }
+function setKey(k) { k = String(k || '').trim(); if (k) LS.set(KEY_K, k); else LS.del(KEY_K); }
+function keyHint() { var k = getKey(); return k ? '\u2026' + k.slice(-4) : ''; }
+function models() {
+  var m = {};
+  try { m = JSON.parse(LS.get(MODELS_K) || '{}') || {}; } catch (e) {}
+  return {std: String(m.std || '').trim() || DEFAULT_MODELS.std, max: String(m.max || '').trim() || DEFAULT_MODELS.max};
+}
+function setModels(m) {
+  var std = String((m && m.std) || '').trim(), max = String((m && m.max) || '').trim(), out = {};
+  if (std && std !== DEFAULT_MODELS.std) out.std = std;
+  if (max && max !== DEFAULT_MODELS.max) out.max = max;
+  if (Object.keys(out).length) LS.set(MODELS_K, JSON.stringify(out)); else LS.del(MODELS_K);
+}
+function needsInstallHint() {
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent || '');
+  var installed = navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  return ios && !installed && !LS.get(HINT_K);
+}
+function dismissInstallHint() { LS.set(HINT_K, '1'); }
+
+/* ---------- IndexedDB ---------- */
+var IDB_NAME = 'plate', IDB_STORE = 'docs';
+function withTimeout(p, ms) {
+  return new Promise(function (res, rej) {
+    var t = setTimeout(function () { rej(new Error('timeout')); }, ms);
+    p.then(function (v) { clearTimeout(t); res(v); }, function (e) { clearTimeout(t); rej(e); });
+  });
+}
+function openIdb() {
+  return new Promise(function (res, rej) {
+    if (!window.indexedDB) return rej(new Error('no indexedDB'));
+    var rq = indexedDB.open(IDB_NAME, 1);
+    rq.onupgradeneeded = function () { rq.result.createObjectStore(IDB_STORE); };
+    rq.onsuccess = function () { res(rq.result); };
+    rq.onerror = function () { rej(rq.error || new Error('idb open')); };
+    rq.onblocked = function () { rej(new Error('idb blocked')); };
+  });
+}
+function idbAll(idb) {
+  return new Promise(function (res, rej) {
+    var out = [], tx = idb.transaction(IDB_STORE, 'readonly'), rq = tx.objectStore(IDB_STORE).openCursor();
+    rq.onsuccess = function () { var c = rq.result; if (c) { out.push([c.key, c.value]); c.continue(); } };
+    tx.oncomplete = function () { res(out); };
+    tx.onerror = tx.onabort = function () { rej(tx.error || new Error('idb read')); };
+  });
+}
+function idbWrite(idb, ops) {
+  return new Promise(function (res, rej) {
+    var tx = idb.transaction(IDB_STORE, 'readwrite'), st = tx.objectStore(IDB_STORE);
+    ops.forEach(function (o) { if (o[0] === 'put') st.put(o[2], o[1]); else st.delete(o[1]); });
+    tx.oncomplete = function () { res(); };
+    tx.onerror = function () { rej(tx.error || new Error('idb write')); };
+    tx.onabort = function () { rej(tx.error || new Error('idb abort')); };
+  });
+}
+
+/* Firestore-shaped document store: everything is mirrored in memory (the log is small),
+   every write goes to IndexedDB first, then to memory, then listeners are told. */
+function makeDb(idb, rows) {
+  var docs = new Map(rows), listeners = [];
+  var PP = 'data/users/' + UID + '/profile', MP = PP + '/meals/';
+
+  function snapDoc(p) {
+    var has = docs.has(p), d = has ? docs.get(p) : null;
+    return {id: p.slice(p.lastIndexOf('/') + 1), exists: has, data: function () { return has ? clone(d) : undefined; }};
+  }
+  function colDocs(col, q) {
+    var arr = [];
+    docs.forEach(function (v, p) { if (p.slice(0, p.lastIndexOf('/')) === col) arr.push({p: p, d: v}); });
+    (q.where || []).forEach(function (w) {
+      var f = w[0], op = w[1], val = w[2];
+      arr = arr.filter(function (x) {
+        var a = x.d[f];
+        switch (op) {
+          case '>=': return a >= val; case '>': return a > val; case '<=': return a <= val; case '<': return a < val;
+          case '==': return a === val; case '!=': return a !== val;
+          case 'in': return Array.isArray(val) && val.indexOf(a) >= 0;
+          default: return true;
+        }
+      });
+    });
+    if (q.order) {
+      var f = q.order[0], dir = q.order[1] === 'desc' ? -1 : 1;
+      arr.sort(function (a, b) { var x = a.d[f], y = b.d[f]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    }
+    if (q.limit) arr = arr.slice(0, q.limit);
+    return arr.map(function (x) { return snapDoc(x.p); });
+  }
+  function fire(l) {
+    try {
+      if (l.type === 'doc') l.cb(snapDoc(l.path));
+      else { var ds = colDocs(l.path, l.q); l.cb({docs: ds, size: ds.length, empty: !ds.length}); }
+    } catch (e) { if (l.err) { try { l.err(e); } catch (e2) {} } }
+  }
+  function notify() { listeners.slice().forEach(fire); }
+  function listen(l) {
+    listeners.push(l);
+    setTimeout(function () { fire(l); }, 0);
+    return function () { var i = listeners.indexOf(l); if (i >= 0) listeners.splice(i, 1); };
+  }
+  async function commit(ops, apply) {
+    if (idb) {
+      try { await idbWrite(idb, ops); }
+      catch (e) { throw {code: (e && e.name === 'QuotaExceededError') ? 'quota_exceeded' : 'unavailable', message: String((e && e.message) || e)}; }
+    }
+    apply();
+    setTimeout(notify, 0);
+  }
+  function docRef(path) {
+    return {
+      id: path.slice(path.lastIndexOf('/') + 1), path: path,
+      get: async function () { return snapDoc(path); },
+      set: async function (d) { var v = clone(d); await commit([['put', path, v]], function () { docs.set(path, v); }); },
+      update: async function (d) {
+        if (!docs.has(path)) throw {code: 'not_found', message: 'no such document'};
+        var v = Object.assign({}, docs.get(path), clone(d));
+        await commit([['put', path, v]], function () { docs.set(path, v); });
+      },
+      delete: async function () { await commit([['del', path]], function () { docs.delete(path); }); },
+      onSnapshot: function (cb, err) { return listen({type: 'doc', path: path, cb: cb, err: err}); },
+      collection: function (name) { return colRef(path + '/' + name); }
+    };
+  }
+  function query(path, q) {
+    return {
+      where: function (f, op, v) { return query(path, Object.assign({}, q, {where: (q.where || []).concat([[f, op, v]])})); },
+      orderBy: function (f, dir) { return query(path, Object.assign({}, q, {order: [f, dir || 'asc']})); },
+      limit: function (n) { return query(path, Object.assign({}, q, {limit: n})); },
+      get: async function () { var ds = colDocs(path, q); return {docs: ds, size: ds.length, empty: !ds.length}; },
+      onSnapshot: function (cb, err) { return listen({type: 'q', path: path, q: q, cb: cb, err: err}); }
+    };
+  }
+  function colRef(path) {
+    return Object.assign(query(path, {}), {path: path, doc: function (id) { return docRef(path + '/' + (id || Math.random().toString(36).slice(2))); }});
+  }
+
+  function backup() {
+    var meals = [], profile = null;
+    docs.forEach(function (v, k) {
+      if (k === PP) profile = clone(v);
+      else if (k.indexOf(MP) === 0) meals.push(Object.assign({id: k.slice(MP.length)}, clone(v)));
+    });
+    return {app: 'plate', v: 1, exported: new Date().toISOString(), profile: profile, meals: meals};
+  }
+  async function restore(obj) {
+    if (!obj || obj.app !== 'plate' || !Array.isArray(obj.meals)) throw {code: 'bad_backup'};
+    var puts = [], n = 0;
+    obj.meals.forEach(function (m) {
+      if (!m || typeof m.id !== 'string' || !/^[\w-]{1,64}$/.test(m.id) || typeof m.ts !== 'number') return;
+      var d = Object.assign({}, m); delete d.id;
+      puts.push([MP + m.id, clone(d)]); n++;
+    });
+    if (obj.profile && typeof obj.profile === 'object') puts.push([PP, clone(obj.profile)]);
+    await commit(puts.map(function (p) { return ['put', p[0], p[1]]; }), function () { puts.forEach(function (p) { docs.set(p[0], p[1]); }); });
+    return n;
+  }
+  return {doc: docRef, collection: colRef, backup: backup, restore: restore};
+}
+
+var dbP = null;
+function getDb() {
+  if (!dbP) dbP = (async function () {
+    try {
+      var idb = await withTimeout(openIdb(), 5000), rows = await withTimeout(idbAll(idb), 8000);
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+      return makeDb(idb, rows);
+    } catch (e) { return null; }
+  })();
+  return dbP;
+}
+
+/* ---------- Anthropic Messages API ---------- */
+function blobToB64(b) {
+  return new Promise(function (res, rej) {
+    var fr = new FileReader();
+    fr.onload = function () { var s = String(fr.result); res(s.slice(s.indexOf(',') + 1)); };
+    fr.onerror = function () { rej(fr.error || new Error('read')); };
+    fr.readAsDataURL(b);
+  });
+}
+function parseLoose(t) {
+  t = String(t || '');
+  var a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) throw {code: 'invalid_json', message: 'no json'};
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw {code: 'invalid_json', message: 'bad json'}; }
+}
+function apiErr(status, body) {
+  var msg = (body && body.error && body.error.message) || '';
+  if (status === 401 || status === 403) return {code: 'bad_key', message: msg};
+  if (status === 404) return {code: 'bad_model', message: msg};
+  if (status === 413) return {code: 'image_rejected', message: msg};
+  if (status === 429) return {code: 'rate_limited', message: msg};
+  if (status === 529 || status >= 500) return {code: 'overloaded', message: msg};
+  if (status === 400) {
+    if (/credit balance|billing|payment/i.test(msg)) return {code: 'no_credit', message: msg};
+    if (/image|media/i.test(msg)) return {code: 'image_rejected', message: msg};
+    return {code: 'bad_request', message: msg};
+  }
+  return {code: 'api_error', message: msg};
+}
+async function callApi(key, body, signal) {
+  var ctl = new AbortController(), timedOut = false, onAbort = function () { ctl.abort(); };
+  if (signal) { if (signal.aborted) throw {code: 'cancelled'}; signal.addEventListener('abort', onAbort); }
+  var timer = setTimeout(function () { timedOut = true; ctl.abort(); }, 180000);
+  try {
+    var r = await fetch(API, {
+      method: 'POST', signal: ctl.signal,
+      headers: {
+        'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+    var txt = await r.text(), j = null;
+    try { j = JSON.parse(txt); } catch (e) {}
+    if (!r.ok) throw apiErr(r.status, j);
+    if (!j) throw {code: 'invalid_json', message: 'not json'};
+    return j;
+  } catch (e) {
+    if (e && e.code) throw e;
+    if (timedOut) throw {code: 'timeout'};
+    if (e && e.name === 'AbortError') throw {code: 'cancelled'};
+    throw {code: 'network', message: String((e && e.message) || e)};
+  } finally {
+    clearTimeout(timer);
+    if (signal) signal.removeEventListener('abort', onAbort);
+  }
+}
+/* effort / thinking controls differ by model; if the API rejects them, retry once without. */
+async function callApiFlex(key, body, signal) {
+  try { return await callApi(key, body, signal); }
+  catch (e) {
+    if (e && e.code === 'bad_request' && body.output_config && /effort|output_config|thinking/i.test(e.message || '')) {
+      var b2 = Object.assign({}, body); delete b2.output_config;
+      return await callApi(key, b2, signal);
+    }
+    throw e;
+  }
+}
+async function sampleJson(prompt, opts) {
+  opts = opts || {};
+  var key = getKey();
+  if (!key) throw {code: 'no_key', message: 'no api key'};
+  var tier = opts.modelTier === 'complex' ? 'max' : 'std';
+  var content = [], imgs = opts.images ? (Array.isArray(opts.images) ? opts.images : [opts.images]) : [];
+  for (var i = 0; i < imgs.length; i++) {
+    content.push({type: 'image', source: {type: 'base64', media_type: imgs[i].type || 'image/jpeg', data: await blobToB64(imgs[i])}});
+  }
+  content.push({type: 'text', text: prompt});
+  /* max_tokens covers thinking plus the JSON reply, so leave plenty of room */
+  var body = {model: models()[tier], max_tokens: 8000, output_config: {effort: EFFORT[tier]}, messages: [{role: 'user', content: content}]};
+  var j = await callApiFlex(key, body, opts.signal);
+  var text = (j.content || []).filter(function (b) { return b && b.type === 'text'; }).map(function (b) { return b.text || ''; }).join('');
+  if (!text.trim()) throw {code: j.stop_reason === 'refusal' ? 'refused' : (j.stop_reason === 'max_tokens' ? 'invalid_json' : 'empty_completion')};
+  return parseLoose(text);
+}
+var sample = function () { throw {code: 'unsupported'}; };
+sample.json = sampleJson;
+sample.limits = async function () {
+  return {maxPromptBytes: 1000000, images: {maxCount: 1, maxInputBytes: 5000000, mediaTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']}};
+};
+async function testKey() {
+  var key = getKey();
+  if (!key) return {ok: false, code: 'no_key'};
+  try {
+    await callApiFlex(key, {model: models().std, max_tokens: 256, output_config: {effort: 'low'}, messages: [{role: 'user', content: 'Reply with the single word OK.'}]}, null);
+    return {ok: true};
+  } catch (e) { return {ok: false, code: (e && e.code) || 'api_error'}; }
+}
+
+/* ---------- exports: share sheet first (iOS), plain download otherwise ---------- */
+async function saveFile(r) {
+  var name = String((r && r.filename) || 'plate.txt'), data = (r && r.data != null) ? r.data : '';
+  var type = /\.json$/i.test(name) ? 'application/json' : /\.csv$/i.test(name) ? 'text/csv' : 'text/plain';
+  var blob = new Blob([data], {type: type + ';charset=utf-8'});
+  try {
+    var file = new File([blob], name, {type: type});
+    if (navigator.canShare && navigator.share && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: name});
+      return {status: 'saved'};
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw {code: 'declined'};
+  }
+  var url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
+  return {status: 'saved'};
+}
+
+/* ---------- the object the app talks to ---------- */
+var user = {id: async function () { return UID; }, isOwner: async function () { return true; }, canEdit: async function () { return true; }};
+var downloads = {save: saveFile};
+window.claude = {
+  standalone: true,
+  use: async function (name) {
+    if (name === 'sample') return sample;
+    if (name === 'db') { var d = await getDb(); return d; }
+    if (name === 'user') return user;
+    if (name === 'downloads') return downloads;
+    return null;
+  },
+  hasKey: function () { return !!getKey(); },
+  keyHint: keyHint, setKey: setKey, clearKey: function () { setKey(''); },
+  testKey: testKey, models: models, setModels: setModels,
+  needsInstallHint: needsInstallHint, dismissInstallHint: dismissInstallHint,
+  backup: async function () { var d = await getDb(); if (!d) throw {code: 'unavailable'}; return d.backup(); },
+  restore: async function (o) { var d = await getDb(); if (!d) throw {code: 'unavailable'}; return d.restore(o); }
+};
+
+/* ---------- offline shell ---------- */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+
+/* ================= helpers ================= */
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+var pad = function(n){ return String(n).padStart(2, '0'); };
+var num = function(x, d){ var n = Number(x); return isFinite(n) && x !== null && x !== '' ? n : (d || 0); };
+var r1 = function(x){ return Math.round(x * 10) / 10; };
+var str = function(x, n){ return String(x == null ? '' : x).trim().slice(0, n); };
+var fmt = function(n){ return Math.round(n).toLocaleString(); };
+var dayKey = function(t){ var d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+var keyToDate = function(k){ var a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+var addDays = function(d, n){ var x = new Date(d); x.setDate(x.getDate() + n); return x; };
+var fmtTime = function(t){ return new Date(t).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}); };
+var localInput = function(t){ var d = new Date(t); return dayKey(t) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+function dayLabel(k){
+  var now = new Date();
+  if (k === dayKey(now)) return 'Today';
+  if (k === dayKey(addDays(now, -1))) return 'Yesterday';
+  return keyToDate(k).toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric'});
+}
+var MEALS = [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['dinner', 'Dinner'], ['snack', 'Snack']];
+var MULTS = [[0.5, '\u00BD'], [0.75, '\u00BE'], [1, '1\u00D7'], [1.25, '1\u00BC'], [1.5, '1\u00BD'], [2, '2\u00D7']];
+var labelOf = function(k){ var m = MEALS.filter(function(x){ return x[0] === k; })[0]; return m ? m[1] : 'Meal'; };
+var mealForHour = function(h){ return h >= 5 && h < 11 ? 'breakfast' : h >= 11 && h < 15 ? 'lunch' : h >= 15 && h < 19 ? 'snack' : h >= 19 && h < 23 ? 'dinner' : 'snack'; };
+var clampGoal = function(x){ return Math.min(8000, Math.max(800, Math.round(num(x, 2000)))); };
+var clampProtein = function(x){ return Math.min(300, Math.max(20, Math.round(num(x, 80)))); };
+var DIETS = [['veg', 'Veg'], ['egg', 'Egg'], ['vegan', 'Vegan'], ['any', 'Any']];
+var QF = [['Home-cooked', 'Cooked at home.'], ['Restaurant', 'Restaurant food.'], ['Less oil or ghee', 'Cooked with less oil and ghee than usual.'], ['Extra ghee or butter', 'Extra ghee or butter on top.']];
+var SUGG = [['Katori size', 'Katori = ___ ml.'], ['Roti', 'Roti = ___ inch, ghee on it: yes or no.'], ['Cooking fat', 'Oil or ghee in dal and sabzi: about ___ tsp per serving.'], ['Milk and chai', 'Milk is ___ (toned, full-cream or buffalo); chai has ___ tsp sugar.']];
+function normSettings(d){
+  d = d || {};
+  return {
+    goal: clampGoal(d.goal), max: !!d.max, protein: clampProtein(d.protein == null ? 80 : d.protein),
+    diet: DIETS.some(function(x){ return x[0] === d.diet; }) ? d.diet : 'veg',
+    kitchen: String(d.kitchen == null ? '' : d.kitchen).trim().slice(0, 600), nudge: !!d.nudge
+  };
+}
+
+var svg = function(p, s){ return '<svg viewBox="0 0 24 24" width="' + (s || 22) + '" height="' + (s || 22) + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; };
+var I = {
+  cam: svg('<path d="M4 8h3l1.5-2.2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.3" r="3.6"/>', 24),
+  img: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/>'),
+  pen: svg('<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+  sliders: svg('<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/>'),
+  x: svg('<path d="M6 6l12 12M18 6L6 18"/>', 18),
+  plate: svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/>', 24),
+  plateBig: svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/>', 44)
+};
+
+/* ================= state ================= */
+var S = {
+  tab: 'today', sheet: null, keep: {}, busy: null, failed: null, fresh: null, openDays: {},
+  meals: [], settings: {goal: 2000, max: false, protein: 80, diet: 'veg', kitchen: '', nudge: false}, mode: 'boot', kitT: 0, againT: 0, againId: '', touched: false, sheetSig: '', keyMsg: '', keyBusy: false, loaded: false, denied: false,
+  caps: {sample: undefined, img: undefined, downloads: null},
+  db: null, prof: null, toastT: 0, ticker: 0, fixing: null, fixErr: '', pendingThumb: '',
+  sampleP: null, readyP: null, readyRes: null
+};
+S.readyP = new Promise(function(r){ S.readyRes = r; });
+var blobs = {};                       // meal id -> full JPEG (this session only; used for re-estimates)
+var chains = {};                      // per-key write queues (one write at a time per doc)
+function serial(key, fn){
+  var prev = chains[key] || Promise.resolve();
+  var next = prev.catch(function(){}).then(fn);
+  chains[key] = next.catch(function(){});
+  return next;
+}
+var byId = function(id){ return S.meals.filter(function(m){ return m.id === id; })[0]; };
+var mult = function(m){ return (typeof m.mult === 'number' && m.mult > 0) ? m.mult : 1; };
+var eff = function(m, k){ return Math.round((m[k] || 0) * mult(m)); };
+function totals(list){
+  var t = {k: 0, p: 0, c: 0, f: 0};
+  list.forEach(function(m){ var x = mult(m); t.k += (m.kcal || 0) * x; t.p += (m.p || 0) * x; t.c += (m.c || 0) * x; t.f += (m.f || 0) * x; });
+  return {k: Math.round(t.k), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f)};
+}
+function groupByDay(){
+  var by = {};
+  S.meals.forEach(function(m){ var k = m.day || dayKey(m.ts); (by[k] = by[k] || []).push(m); });
+  return by;
+}
+function rangePct(m){
+  if (m.src === 'manual' || m.edited || !m.kcal || !(m.high > m.low)) return 0;
+  return Math.round(((m.high - m.low) / 2) / m.kcal * 100);
+}
+
+/* ================= item quantities ================= */
+var NOPLURAL = {tsp: 1, tbsp: 1, ml: 1, l: 1, g: 1, kg: 1, oz: 1, lb: 1, cm: 1};
+function fmtCount(n){
+  n = Math.round(n * 4) / 4;
+  var w = Math.floor(n), f = Math.round((n - w) * 100) / 100;
+  var fr = f === 0.25 ? '\u00BC' : f === 0.5 ? '\u00BD' : f === 0.75 ? '\u00BE' : '';
+  return fr ? (w ? String(w) : '') + fr : String(w);
+}
+function plural(u, n){
+  u = String(u || '').trim();
+  if (!u || n <= 1 || NOPLURAL[u.toLowerCase()] || /[^s]s$/i.test(u)) return u;
+  return /(s|x|z|ch|sh)$/i.test(u) ? u + 'es' : u + 's';
+}
+function singular(u){
+  u = String(u || '').trim().toLowerCase();
+  if (/ies$/.test(u) && u.length > 4) return u.slice(0, -3) + 'y';
+  if (/(sses|xes|ches|shes|zes)$/.test(u)) return u.slice(0, -2);
+  if (/[^s]s$/.test(u) && u.length > 3) return u.slice(0, -1);
+  return u;
+}
+var itemX = function(i){ return (i && typeof i.x === 'number' && i.x >= 0) ? i.x : 1; };
+function itemQty(i, xm){
+  var ix = itemX(i) * xm, parts = [];
+  if (i.cnt > 0) { var c = i.cnt * ix; parts.push(fmtCount(c) + (i.u ? ' ' + plural(i.u, Math.round(c * 4) / 4) : '')); }
+  parts.push(Math.round(i.g * ix) + ' g');
+  return parts.join(' \u00B7 ');
+}
+function sumItems(items){
+  var t = {k: 0, p: 0, c: 0, f: 0};
+  items.forEach(function(i){ var x = itemX(i); t.k += i.k * x; t.p += i.p * x; t.c += i.c * x; t.f += i.f * x; });
+  return {k: Math.round(t.k), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f)};
+}
+
+/* ================= Claude estimate ================= */
+var ANCHORS = 'phulka or roti 6-7 in about 100 (3 g protein), plus 45 per tsp ghee; plain paratha 180-230, stuffed paratha 260-350; puri about 110 each; naan 260-300; cooked rice 1 katori (150 g) about 195; jeera rice or pulao 1 katori 230-270; restaurant veg biryani plate 500-650; idli about 60 each; plain dosa 130-170, restaurant masala dosa 350-500; medu vada about 150; upma or poha 1 katori 200-260; thin dal 1 katori 100-140 with light tadka; dal fry or tadka 150-200; restaurant dal makhani 250-330; rajma or chole 1 katori 180-250; sambar 80-110; kadhi 130-180; dry sabzi 1 katori 80-140 (potato-based 140-200); paneer 100 g about 280 kcal; home paneer gravy 1 katori 180-280, restaurant 300-450; paneer bhurji 250-330; dahi 1 katori 60-100; raita 70-110; chaas 1 glass about 40; sweet lassi 1 glass 220-300; milk 250 ml 140-160 (buffalo milk about 230); chai with milk and 1 tsp sugar 70-90 per cup; samosa about 250; kachori about 230; pakora 40-60 each; vada pav about 300; pav bhaji plate (2 pav + bhaji) 520-700; pani puri x6 about 200; bhel plate about 300; dhokla about 60 per piece; gulab jamun about 160 each; jalebi about 120 per piece; rasgulla about 110; laddoo about 170; halwa 1 katori 250-350; kheer 180-280; almonds 10 g about 60; banana about 100.';
+function dietLine(d){
+  if (d === 'veg') return 'DIET: the user is vegetarian in the Indian sense (no meat, fish or eggs; dairy such as paneer, curd, ghee and milk is normal). Assume every dish is vegetarian. If something clearly is not, still estimate it and say so in assumptions.';
+  if (d === 'egg') return 'DIET: the user is vegetarian but eats eggs (no meat or fish). Dairy such as paneer, curd, ghee and milk is normal.';
+  if (d === 'vegan') return 'DIET: the user is vegan (no meat, fish, eggs or dairy). Assume oil rather than ghee or butter, plant milk or none in tea, and tofu or soy rather than paneer, unless the photo clearly shows paneer or dairy.';
+  return '';
+}
+function buildPrompt(o){
+  var L = [], st = S.settings || {};
+  L.push('You are a meticulous dietitian with deep knowledge of Indian home cooking and restaurant food (North and South Indian, Gujarati, Maharashtrian, Bengali, street food, sweets), estimating the calories and macros of ONE meal. Be accurate, not cautious.');
+  if (o.hasImage) L.push('The attached image is a photo of the meal. Estimate only what is actually on the plate or in the frame.');
+  if (o.text) L.push('The user describes the meal (no photo): ' + JSON.stringify(o.text) + '. Assume typical Indian home serving sizes where unspecified and say so in "assumptions".');
+  if (o.note) L.push('Extra detail from the user (treat as true): ' + JSON.stringify(o.note));
+  if (o.prev) L.push('Your previous estimate was: ' + JSON.stringify(o.prev) + '. The user is correcting it. Revise accordingly and keep whatever is still right.');
+  var dl = dietLine(st.diet); if (dl) L.push(dl);
+  var kit = String(st.kitchen || '').replace(/[^.!?\n]*___[^.!?\n]*[.!?]?/g, ' ').replace(/\s+/g, ' ').trim();
+  if (kit) L.push('HOUSEHOLD FACTS from the user (trust these over every default below): ' + JSON.stringify(kit));
+  L.push('Method:');
+  L.push('1. List every distinct food and drink. For a thali or multi-bowl plate, list each katori or bowl separately. Include roti or rice, dal, sabzi, curd or raita, chutney, pickle, papad, salad, sweets, chai, coffee, lassi, chaas, and garnishes (cream, butter, fried onion, nuts).');
+  L.push('2. Estimate each item served weight in grams (ml for drinks) from scale cues: plate or thali diameter (dinner plate about 26 cm, thali about 30 cm), katori (a typical home katori holds about 150 ml, restaurant bowls 150-200 ml), roti diameter (a phulka is 15-18 cm), spoons, hands, glasses, and how deep the food is piled. Also give the count in natural household units (2 rotis, 1 katori, 3 idlis, 1 glass, 2 tsp).');
+  L.push('3. HIDDEN FAT is the biggest source of error in Indian food, so count it explicitly: tadka or tempering oil and ghee, ghee or butter on roti, paratha, rice or dal, oil in sabzi, cream, malai, butter and cashew paste in restaurant gravies, frying oil, ghee and sugar in sweets, and milk and sugar in chai. Typical home cooking uses about 1 tsp (5 g) of oil or ghee per katori of dal or dry sabzi and 1.5-2 tsp per katori of gravy. Restaurant, dhaba and takeaway food usually has 2-3x that. A visible oil film or a red-orange oil layer on top means high fat. 1 tsp ghee = 45 kcal, oil = 40, butter = 36, sugar = 20.');
+  L.push('4. When added fat can be separated, list it as its own item (for example "Ghee on rotis", "Oil in sabzi and tadka", "Butter on pav") and keep the other items at base-food values, so the user can correct the fat with one tap. If it cannot be separated (a cream-rich gravy), fold it into the dish.');
+  L.push('5. Judge the setting from the photo: home-cooked, restaurant or packaged. Restaurant paneer, dal makhani and cream-based gravies run roughly 1.5-2x the calories of home versions (about 350-450 kcal per 200 g of restaurant paneer butter masala vs 200-280 at home).');
+  L.push('6. If a nutrition label, package size or menu calorie count is visible, treat it as ground truth and scale it to the portion shown.');
+  L.push('7. Use cooked weights, never dry weights, for cooked food: rice about 1.3 kcal/g, thin dal 0.6-0.9, thick dal, rajma or chole 1.0-1.5 (before added fat), plain curd 0.6-0.9.');
+  L.push('8. Protein matters to this user. Do not inflate protein for rice or roti dishes; credit paneer (about 18 g per 100 g), dal (6-9 g per katori), curd (3-4 g per 100 g), milk (8 g per glass), soy chunks, sprouts and besan realistically.');
+  L.push('9. Typical values to anchor on (kcal per serving as eaten; adjust to what you see): ' + ANCHORS);
+  L.push('10. Give your best central estimate (not low-balled, not padded), then a realistic low-high range that should contain the true value about 80% of the time. Widen it for gravies, fried food, sweets and restaurant food (about 25-35%); tighten it for simple or labelled food (10-15%).');
+  L.push('11. total_kcal must equal the sum of the item kcal. Macros are in grams.');
+  L.push('12. If the image is not food, or you cannot tell what it is, reply {"is_food": false, "reason": "<short reason>"}.');
+  L.push('Reply with ONLY JSON in this shape (the example shows the format only; never reuse its numbers):');
+  L.push('{"is_food":true,"meal_name":"Dal tadka, 2 phulka, bhindi sabzi","setting":"home","items":[{"name":"Phulka roti","count":2,"unit":"roti","grams":70,"kcal":190,"protein_g":6,"carbs_g":38,"fat_g":2},{"name":"Oil in sabzi and tadka","count":2,"unit":"tsp","grams":10,"kcal":80,"protein_g":0,"carbs_g":0,"fat_g":9}],"total_kcal":550,"low_kcal":470,"high_kcal":650,"confidence":"medium","assumptions":"One or two sentences on portion sizes, the hidden-fat amount you assumed, and home vs restaurant."}');
+  L.push('count is how many of unit (one singular word such as roti, katori, piece, glass, cup, tsp, tbsp, slice); use count 0 and unit "" when no natural unit applies. setting is "home", "restaurant", "packaged" or "unknown". confidence is "high", "medium" or "low".');
+  return L.join('\n');
+}
+function parseLoose(t){
+  t = String(t || '');
+  var a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) throw {code: 'invalid_json', message: 'no json'};
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw {code: 'invalid_json', message: 'bad json'}; }
+}
+function normalize(r){
+  if (!r || typeof r !== 'object' || Array.isArray(r)) throw {code: 'invalid_json', message: 'shape'};
+  if (r.is_food === false) return {notFood: true, reason: str(r.reason, 140)};
+  var items = (Array.isArray(r.items) ? r.items : []).slice(0, 14).map(function(it){
+    it = it || {};
+    var cnt = Math.max(0, Math.min(50, Math.round(num(it.count) * 4) / 4)), un = singular(str(it.unit, 16));
+    return {
+      n: str(it.name, 60) || 'Item',
+      cnt: cnt, u: cnt > 0 ? (un || 'piece') : '',
+      g: Math.max(0, Math.round(num(it.grams))),
+      k: Math.max(0, Math.round(num(it.kcal))),
+      p: Math.max(0, r1(num(it.protein_g))), c: Math.max(0, r1(num(it.carbs_g))), f: Math.max(0, r1(num(it.fat_g)))
+    };
+  });
+  var kcal = items.reduce(function(a, i){ return a + i.k; }, 0);
+  if (!kcal) kcal = Math.round(num(r.total_kcal));
+  if (!(kcal > 0)) throw {code: 'invalid_json', message: 'no calories'};
+  var p = r1(items.reduce(function(a, i){ return a + i.p; }, 0));
+  var c = r1(items.reduce(function(a, i){ return a + i.c; }, 0));
+  var f = r1(items.reduce(function(a, i){ return a + i.f; }, 0));
+  if (!(p || c || f)) { p = r1(num(r.protein_g)); c = r1(num(r.carbs_g)); f = r1(num(r.fat_g)); }
+  var conf = ['high', 'medium', 'low'].indexOf(r.confidence) >= 0 ? r.confidence : 'medium';
+  var spread = {high: .12, medium: .2, low: .32}[conf];
+  var low = Math.round(num(r.low_kcal)), high = Math.round(num(r.high_kcal));
+  if (!(low > 0 && low <= kcal)) low = Math.round(kcal * (1 - spread));
+  if (!(high >= kcal)) high = Math.round(kcal * (1 + spread));
+  return {
+    name: str(r.meal_name, 80) || (items[0] && items[0].n) || 'Meal',
+    items: items, kcal: kcal, p: Math.round(p), c: Math.round(c), f: Math.round(f),
+    low: low, high: high, conf: conf, why: str(r.assumptions, 400),
+    set: ['home', 'restaurant', 'packaged'].indexOf(r.setting) >= 0 ? r.setting : 'unknown'
+  };
+}
+async function estimate(o, ctl, onFirstText){
+  await S.sampleP;
+  var s = S.caps.sample;
+  if (!s) throw {code: S.denied ? 'not_granted' : 'sampling_disabled'};
+  var opts = {signal: ctl.signal, modelTier: S.settings.max ? 'complex' : 'default', cache: false};
+  if (o.blob) opts.images = o.blob;
+  if (onFirstText) { var fired = false; opts.onText = function(){ if (!fired) { fired = true; onFirstText(); } }; }
+  var prompt = buildPrompt({hasImage: !!o.blob, text: o.text, note: o.note, prev: o.prev});
+  var raw;
+  if (typeof s.json === 'function') raw = await s.json(prompt, opts);
+  else { var r = await s(prompt, opts); raw = parseLoose(r && r.text); }
+  return normalize(raw);
+}
+
+/* ================= image prep ================= */
+function readDataURL(file){ return new Promise(function(res, rej){ var fr = new FileReader(); fr.onload = function(){ res(fr.result); }; fr.onerror = function(){ rej(fr.error || new Error('read')); }; fr.readAsDataURL(file); }); }
+function loadImg(src){ return new Promise(function(res, rej){ var im = new Image(); im.onload = function(){ res(im); }; im.onerror = function(){ rej(new Error('decode')); }; im.src = src; }); }
+function toBlob(cv, type, q){ return new Promise(function(res){ cv.toBlob(res, type, q); }); }
+async function prepareImage(file){
+  var im = await loadImg(await readDataURL(file));
+  var W = im.naturalWidth, H = im.naturalHeight;
+  if (!W || !H) throw new Error('empty');
+  var sc = Math.min(1, 1568 / Math.max(W, H));
+  var cv = document.createElement('canvas'); cv.width = Math.round(W * sc); cv.height = Math.round(H * sc);
+  cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+  var blob = await toBlob(cv, 'image/jpeg', 0.86);
+  if (!blob) throw new Error('encode');
+  var ps = Math.min(1, 480 / Math.max(W, H));
+  var pv = document.createElement('canvas'); pv.width = Math.round(W * ps); pv.height = Math.round(H * ps);
+  pv.getContext('2d').drawImage(im, 0, 0, pv.width, pv.height);
+  var T = 112, tc = document.createElement('canvas'); tc.width = T; tc.height = T;
+  var s = Math.min(W, H);
+  tc.getContext('2d').drawImage(im, (W - s) / 2, (H - s) / 2, s, s, 0, 0, T, T);
+  return {blob: blob, preview: pv.toDataURL('image/jpeg', 0.7), thumb: tc.toDataURL('image/jpeg', 0.62)};
+}
+
+/* ================= store ================= */
+async function saveMeal(doc, blob){
+  await S.readyP;
+  var id = 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  if (S.mode === 'db') await S.prof.collection('meals').doc(id).set(doc);
+  else S.meals = [Object.assign({id: id}, doc)].concat(S.meals).sort(function(a, b){ return b.ts - a.ts; });
+  if (blob) blobs[id] = blob;
+  S.fresh = id;
+  setTimeout(function(){ if (S.fresh === id) { S.fresh = null; render(); } }, 3000);
+  render();
+  return id;
+}
+async function patchMeal(id, patch){
+  await S.readyP;
+  if (S.mode === 'db') await serial('m:' + id, function(){ return S.prof.collection('meals').doc(id).update(patch); });
+  else S.meals = S.meals.map(function(m){ return m.id === id ? Object.assign({}, m, patch) : m; });
+  render();
+}
+async function removeMeal(id){
+  await S.readyP;
+  if (dirty[id]) { clearTimeout(dirty[id].t); delete dirty[id]; }
+  if (S.mode === 'db') await serial('m:' + id, function(){ return S.prof.collection('meals').doc(id).delete(); });
+  else S.meals = S.meals.filter(function(m){ return m.id !== id; });
+  delete blobs[id];
+  render();
+}
+var dirty = {};                       // meal id -> pending quantity edits {ver, t, base}
+function markDirty(id, base){
+  var d = dirty[id] || (dirty[id] = {ver: 0, base: base});
+  d.ver++; clearTimeout(d.t);
+  d.t = setTimeout(function(){ flushMeal(id); }, 450);
+}
+function flushMeal(id){
+  var d = dirty[id]; if (!d) return Promise.resolve();
+  clearTimeout(d.t);
+  var m = byId(id), v = d.ver;
+  if (!m) { delete dirty[id]; return Promise.resolve(); }
+  var done = function(){ if (dirty[id] && dirty[id].ver === v) delete dirty[id]; };
+  if (S.mode !== 'db') { done(); return Promise.resolve(); }
+  var patch = {items: m.items, kcal: m.kcal, p: m.p, c: m.c, f: m.f, low: m.low, high: m.high};
+  return serial('m:' + id, function(){ return S.prof.collection('meals').doc(id).update(patch); }).then(done, function(){
+    var base = d.base; delete dirty[id];
+    S.meals = S.meals.map(function(x){ return x.id === id ? base : x; }); render();
+    toast('Couldn\u2019t save that change');
+  });
+}
+function flushAll(){ Object.keys(dirty).forEach(function(id){ flushMeal(id); }); }
+function stepItem(id, idx, dir){
+  var m = byId(id); if (!m || m.edited || !m.items || !m.items[idx]) return;
+  var items = m.items.map(function(i){ return Object.assign({}, i); });
+  var it = items[idx], xm = mult(m);
+  var b = it.cnt > 0 ? it.cnt : 1, st = it.cnt > 0 ? (it.cnt >= 2 ? 1 : 0.5) : 0.25;
+  var cur = b * itemX(it) * xm, nxt = Math.max(0, Math.round((cur + dir * st) * 4) / 4);
+  if (nxt === cur) return;
+  it.x = Math.min(8, Math.round(nxt / (b * xm) * 1000) / 1000);
+  var t = sumItems(items), low, high;
+  if (m.kcal > 0 && m.high > m.low) { low = Math.round(m.low * t.k / m.kcal); high = Math.round(m.high * t.k / m.kcal); }
+  else { var sp = {high: .12, medium: .2, low: .32}[m.conf] || .2; low = Math.round(t.k * (1 - sp)); high = Math.round(t.k * (1 + sp)); }
+  var prev = dirty[id] ? dirty[id].base : m;
+  S.meals = S.meals.map(function(x){ return x.id === id ? Object.assign({}, x, {items: items, kcal: t.k, p: t.p, c: t.c, f: t.f, low: low, high: high}) : x; });
+  markDirty(id, prev);
+  render();
+}
+function settingsDoc(){ var t = S.settings; return {goal: t.goal, max: t.max, protein: t.protein, diet: t.diet, kitchen: t.kitchen, nudge: t.nudge}; }
+function saveSettings(p, quiet){
+  S.settings = Object.assign({}, S.settings, p);
+  if (quiet) renderView(); else render();
+  if (S.mode === 'db') serial('settings', function(){ return S.prof.set(settingsDoc()); }).catch(function(){ toast('Couldn\u2019t save that setting'); });
+}
+function saveKitchenNow(){
+  clearTimeout(S.kitT);
+  var el = $('#kitchenIn'); if (!el) return;
+  var v = str(el.value, 600);
+  if (v !== S.settings.kitchen) saveSettings({kitchen: v}, true);
+}
+function flushSettingsInputs(){
+  if (!S.touched) { clearTimeout(S.kitT); return; }
+  var g = $('#goalIn'), pr = $('#protIn'), k = $('#kitchenIn'), patch = {};
+  if (g && g.value !== '' && clampGoal(g.value) !== S.settings.goal) patch.goal = clampGoal(g.value);
+  if (pr && pr.value !== '' && clampProtein(pr.value) !== S.settings.protein) patch.protein = clampProtein(pr.value);
+  if (k && str(k.value, 600) !== S.settings.kitchen) patch.kitchen = str(k.value, 600);
+  clearTimeout(S.kitT);
+  if (Object.keys(patch).length) saveSettings(patch, true);
+}
+function subscribe(){
+  S.prof.onSnapshot(function(snap){
+    var d = snap.exists ? snap.data() : null;
+    if (d) S.settings = normSettings(d);
+    renderView();
+    var ae = document.activeElement, typing = ae && $('#sheetHost').contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName);
+    if (S.sheet && S.sheet.type === 'settings' && !S.touched && !typing) renderSheet();
+  }, function(){});
+  var since = Date.now() - 90 * 864e5;
+  S.prof.collection('meals').where('ts', '>=', since).orderBy('ts', 'desc').limit(1000).onSnapshot(function(snap){
+    S.meals = snap.docs.map(function(d){
+      if (dirty[d.id]) { var loc = byId(d.id); if (loc) return loc; }
+      return Object.assign({id: d.id}, d.data());
+    });
+    S.loaded = true;
+    if (S.sheet && S.sheet.type === 'meal' && !byId(S.sheet.id)) { closeSheet(); render(); return; }
+    renderView();
+    if (S.sheet && S.sheet.type === 'meal') { var cm = byId(S.sheet.id); if (JSON.stringify(cm) !== S.sheetSig) renderSheet(); }
+  }, function(){ toast('Lost the connection to your saved log'); });
+}
+
+/* ================= analysis flow ================= */
+function errMsg(code){
+  return ({
+    not_granted: 'Claude access was declined, so photos can\u2019t be analyzed. Reopen this page and tap Allow.',
+    sampling_disabled: 'Claude isn\u2019t available for this account here.',
+    rate_limited: 'You\u2019ve hit a Claude rate or usage limit. Try again in a minute.',
+    image_rejected: 'That photo couldn\u2019t be processed. Try a different one.',
+    images_unavailable: 'Photo analysis isn\u2019t supported in this view. You can describe the meal instead.',
+    refused: 'Claude declined to analyze that one. Try a clearer photo.',
+    invalid_json: 'The estimate came back garbled. Try again.',
+    empty_completion: 'No estimate came back. Try again.',
+    session_expired: 'Your session expired. Reopen this page from Claude.',
+    no_key: 'Add your Anthropic API key in Settings to turn on photo analysis.',
+    bad_key: 'Anthropic rejected that API key. Open Settings and paste it again.',
+    bad_model: 'That model name was not found. Check Models in Settings.',
+    no_credit: 'Your Anthropic API balance is empty. Add credit in the Anthropic Console, then retry.',
+    overloaded: 'Claude is overloaded right now. Try again in a moment.',
+    network: 'No connection to Anthropic. Check your internet and retry.',
+    timeout: 'That took too long. Try again.',
+    bad_request: 'Anthropic could not process that request. Try again, or use a different photo.'
+  })[code] || 'Something interrupted the analysis. Try again.';
+}
+function dbMsg(e){
+  return (e && e.code === 'quota_exceeded') ? 'Your saved log is full. Delete some old entries.' : 'Couldn\u2019t save this entry. Check your connection and retry.';
+}
+function beginBusy(stage, preview){
+  S.busy = {ctl: new AbortController(), t0: Date.now(), stage: stage, preview: preview || null};
+  S.failed = null; S.tab = 'today';
+  startTicker(); render();
+  window.scrollTo(0, 0);
+}
+function stopBusy(){ S.busy = null; stopTicker(); }
+function startTicker(){
+  stopTicker();
+  S.ticker = setInterval(function(){
+    var el = $('#busyEl');
+    if (el && S.busy) el.textContent = Math.round((Date.now() - S.busy.t0) / 1000) + 's \u00B7 keep this screen open';
+  }, 1000);
+}
+function stopTicker(){ clearInterval(S.ticker); S.ticker = 0; }
+function buildDoc(est, input){
+  var ts = input.when || Date.now();
+  return {
+    ts: ts, day: dayKey(ts), meal: mealForHour(new Date(ts).getHours()),
+    name: est.name, kcal: est.kcal, p: est.p, c: est.c, f: est.f,
+    low: est.low, high: est.high, conf: est.conf, items: est.items, why: est.why,
+    note: str(input.text || input.note || '', 300), thumb: input.thumb || '',
+    set: est.set, mult: 1, src: input.blob ? 'photo' : 'text', edited: false, v: 2
+  };
+}
+async function analyze(input){
+  if (!S.busy) beginBusy('Analyzing\u2026', input.preview);
+  var busy = S.busy;
+  busy.stage = 'Analyzing\u2026'; if (input.preview) busy.preview = input.preview;
+  render();
+  var est;
+  try {
+    est = await estimate(input, busy.ctl, function(){
+      if (S.busy === busy) { busy.stage = 'Totaling it up\u2026'; var el = $('#busyStage'); if (el) el.textContent = busy.stage; }
+    });
+  } catch (e) {
+    if (S.busy !== busy) return;
+    stopBusy();
+    var code = e && e.code;
+    if (code !== 'cancelled') {
+      if (code === 'not_granted') { S.denied = true; S.caps.sample = null; }
+      if (code === 'images_unavailable') S.caps.img = null;
+      S.failed = {kind: 'analyze', code: code, message: errMsg(code), input: input, canRetry: ['not_granted', 'sampling_disabled', 'images_unavailable', 'session_expired', 'no_key', 'bad_key', 'bad_model'].indexOf(code) < 0};
+    }
+    render(); return;
+  }
+  if (S.busy !== busy) return;
+  stopBusy();
+  if (est.notFood) {
+    S.failed = {kind: 'notfood', message: est.reason ? 'That doesn\u2019t look like food: ' + est.reason : 'That doesn\u2019t look like food.', input: input};
+    render(); return;
+  }
+  var doc = buildDoc(est, input);
+  try {
+    var id = await saveMeal(doc, input.blob);
+    toast('Saved \u00B7 ' + fmt(doc.kcal) + ' kcal', {label: 'Details', id: id});
+  } catch (e) {
+    S.failed = {kind: 'save', message: dbMsg(e), doc: doc, blob: input.blob};
+    render();
+  }
+}
+async function onFile(file, fromLibrary){
+  if (!file) return;
+  if (S.busy) { toast('Still working on the last one'); return; }
+  var cl0 = window.claude;
+  if (cl0 && cl0.standalone && !cl0.hasKey()) { openSheet({type: 'settings'}); focusKey(); toast('Add your API key to analyze photos'); return; }
+  if (S.caps.sample === null || S.caps.img === null) {
+    toast(S.denied ? 'Claude access was declined for this page.' : 'Photo analysis isn\u2019t available here. Describe the meal instead.');
+    openSheet({type: 'manual'}); return;
+  }
+  var when = Date.now();
+  if (fromLibrary && file.lastModified) { var age = Date.now() - file.lastModified; if (age > 60000 && age < 7 * 864e5) when = file.lastModified; }
+  beginBusy('Preparing photo\u2026');
+  var busy = S.busy, img;
+  try { img = await prepareImage(file); }
+  catch (e) {
+    if (S.busy !== busy) return;
+    stopBusy(); S.failed = {kind: 'photo', message: 'Couldn\u2019t read that photo. Try again or pick a different one.'}; render(); return;
+  }
+  if (S.busy !== busy) return;
+  await analyze({blob: img.blob, thumb: img.thumb, preview: img.preview, when: when});
+}
+
+/* ================= fix / edit / manual ================= */
+async function fixMeal(){
+  if (S.fixing || !S.sheet || S.sheet.type !== 'meal') return;
+  var id = S.sheet.id, m = byId(id), inp = $('#fixNote'), note = str(inp && inp.value, 400);
+  if (!m || !note) return;
+  if (!S.caps.sample && S.caps.sample !== undefined) { S.fixErr = 'Claude isn\u2019t available in this view.'; renderSheet(); return; }
+  var fx = S.fixing = {id: id, ctl: new AbortController()};
+  S.fixErr = ''; renderSheet();
+  try {
+    await flushMeal(id); m = byId(id) || m;
+    var x = mult(m);
+    var prev = {meal_name: m.name, total_kcal: eff(m, 'kcal'), assumptions: m.why || '',
+      items: (m.items || []).map(function(i){ var ix = itemX(i) * x; return {name: i.n, count: i.cnt > 0 ? Math.round(i.cnt * ix * 4) / 4 : 0, unit: i.u || '', grams: Math.round(i.g * ix), kcal: Math.round(i.k * ix)}; })};
+    var est = await estimate({blob: blobs[id] || null, note: note, prev: prev}, fx.ctl);
+    if (est.notFood) throw {code: 'refused'};
+    await patchMeal(id, {name: est.name, kcal: est.kcal, p: est.p, c: est.c, f: est.f, low: est.low, high: est.high,
+      set: est.set, conf: est.conf, items: est.items, why: est.why, mult: 1, edited: false, src: m.src === 'manual' ? 'text' : m.src,
+      note: str((m.note ? m.note + ' | ' : '') + note, 300)});
+    if ($('#fixNote')) $('#fixNote').value = '';
+    S.keep = {};
+  } catch (e) {
+    if (!(e && e.code === 'cancelled')) S.fixErr = errMsg(e && e.code);
+  } finally {
+    S.fixing = null; if (S.sheet) renderSheet();
+  }
+}
+async function saveEdit(){
+  var sh = S.sheet, m = sh && byId(sh.id); if (!m) return;
+  var v = function(id){ var el = $('#' + id); return el ? el.value : ''; };
+  var kcal = Math.round(num(v('edK'), -1));
+  if (!(kcal >= 0 && kcal < 10000)) { sh.err = 'Enter calories between 0 and 9,999.'; renderSheet(); return; }
+  var w = v('edWhen') ? new Date(v('edWhen')).getTime() : m.ts, ts = isFinite(w) ? w : m.ts;
+  var p = Math.max(0, Math.round(num(v('edP')))), c = Math.max(0, Math.round(num(v('edC')))), f = Math.max(0, Math.round(num(v('edF'))));
+  var patch = {name: str(v('edName'), 80) || m.name, ts: ts, day: dayKey(ts)};
+  if (kcal !== eff(m, 'kcal') || p !== eff(m, 'p') || c !== eff(m, 'c') || f !== eff(m, 'f')) {
+    Object.assign(patch, {kcal: kcal, p: p, c: c, f: f, low: kcal, high: kcal, mult: 1, edited: true});
+  }
+  try { await patchMeal(m.id, patch); sh.mode = 'view'; sh.err = ''; S.keep = {}; renderSheet(); }
+  catch (e) { sh.err = 'Couldn\u2019t save that change.'; renderSheet(); }
+}
+async function saveManual(){
+  var sh = S.sheet; if (!sh) return;
+  var v = function(id){ var el = $('#' + id); return el ? el.value.trim() : ''; };
+  var text = str(v('mText'), 300), kRaw = v('mK');
+  var w = v('mWhen') ? new Date(v('mWhen')).getTime() : Date.now(), ts = isFinite(w) ? w : Date.now();
+  if (kRaw === '') {
+    if (!text) { sh.err = 'Describe what you ate, or enter the calories.'; renderSheet(); return; }
+    if (S.caps.sample === null) { sh.err = 'Claude isn\u2019t available here. Enter the calories yourself.'; renderSheet(); return; }
+    var th = S.pendingThumb; closeSheet(); analyze({text: text, thumb: th, when: ts}); return;
+  }
+  var kcal = Math.round(num(kRaw, -1));
+  if (!(kcal >= 0 && kcal < 10000)) { sh.err = 'Enter calories between 0 and 9,999.'; renderSheet(); return; }
+  var doc = {ts: ts, day: dayKey(ts), meal: mealForHour(new Date(ts).getHours()), name: text ? str(text, 80) : 'Manual entry', kcal: kcal,
+    p: Math.max(0, Math.round(num(v('mP')))), c: Math.max(0, Math.round(num(v('mC')))), f: Math.max(0, Math.round(num(v('mF')))),
+    low: kcal, high: kcal, conf: 'high', items: [], why: '', note: '', thumb: S.pendingThumb || '', mult: 1, src: 'manual', edited: false, v: 1};
+  try { await saveMeal(doc, null); closeSheet(); toast('Saved \u00B7 ' + fmt(kcal) + ' kcal'); }
+  catch (e) { sh.err = dbMsg(e); renderSheet(); }
+}
+async function exportCsv(){
+  var dl = S.caps.downloads; if (!dl) return;
+  var rows = S.meals;
+  if (S.mode === 'db') {
+    try { var snap = await S.prof.collection('meals').orderBy('ts', 'desc').limit(1000).get(); rows = snap.docs.map(function(d){ return Object.assign({id: d.id}, d.data()); }); } catch (e) {}
+  }
+  var cell = function(v, text){ var s = String(v == null ? '' : v); if (text && /^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+  var lines = [['date', 'time', 'meal', 'name', 'kcal', 'protein_g', 'carbs_g', 'fat_g', 'estimate_low', 'estimate_high', 'confidence', 'source', 'setting', 'note'].join(',')];
+  rows.slice().sort(function(a, b){ return a.ts - b.ts; }).forEach(function(m){
+    var d = new Date(m.ts);
+    lines.push([cell(m.day || dayKey(m.ts)), cell(pad(d.getHours()) + ':' + pad(d.getMinutes())), cell(m.meal), cell(m.name, true), eff(m, 'kcal'), eff(m, 'p'), eff(m, 'c'), eff(m, 'f'), eff(m, 'low'), eff(m, 'high'), cell(m.conf), cell(m.src), cell(m.set), cell(m.note, true)].join(','));
+  });
+  try { await dl.save({filename: 'calories-' + dayKey(Date.now()) + '.csv', data: lines.join('\n')}); }
+  catch (e) { if (!e || e.code !== 'declined') toast('Couldn\u2019t export the file'); }
+}
+
+async function logAgain(id){
+  var m = byId(id); if (!m) return;
+  var now = Date.now();
+  if (S.againId === id && now - S.againT < 700) return;
+  S.againId = id; S.againT = now;
+  var doc = {};
+  ['name', 'kcal', 'p', 'c', 'f', 'low', 'high', 'conf', 'why', 'thumb', 'mult', 'edited', 'set'].forEach(function(k){ if (m[k] !== undefined) doc[k] = m[k]; });
+  doc.items = (m.items || []).map(function(i){ return Object.assign({}, i); });
+  Object.assign(doc, {ts: now, day: dayKey(now), meal: mealForHour(new Date(now).getHours()), note: '', src: 'repeat', v: 2});
+  try { var nid = await saveMeal(doc, null); toast('Logged again \u00B7 ' + fmt(eff(doc, 'kcal')) + ' kcal', {label: 'Undo', id: nid, kind: 'undo'}); }
+  catch (e) { toast(dbMsg(e)); }
+}
+
+/* ================= rendering ================= */
+function thumbHTML(m, cls){
+  var ok = typeof m.thumb === 'string' && m.thumb.indexOf('data:image/jpeg;base64,') === 0;
+  return ok ? '<img class="thumb ' + (cls || '') + '" alt="" src="' + esc(m.thumb) + '">' : '<span class="thumb ' + (cls || '') + '">' + I.plate + '</span>';
+}
+function mealCard(m, flat){
+  var rp = rangePct(m);
+  var meta = labelOf(m.meal) + ' \u00B7 ' + fmtTime(m.ts);
+  return '<button class="' + (flat ? 'meal flat' : 'card meal') + (S.fresh === m.id ? ' fresh' : '') + '" data-act="open" data-id="' + esc(m.id) + '">' +
+    thumbHTML(m) +
+    '<span class="mm"><span class="mname">' + esc(m.name) + '</span><span class="mmeta">' + esc(meta) +
+    (rp ? ' \u00B7 <i class="dot ' + esc(m.conf) + '"></i>\u00B1' + rp + '%' : '') + '</span></span>' +
+    '<span class="mk"><b>' + fmt(eff(m, 'kcal')) + '</b><small>kcal</small></span></button>';
+}
+function bannerHTML(){
+  var cl = window.claude, web = !!(cl && cl.standalone), t = '', btn = '';
+  if (S.mode === 'standalone') t = 'Open this page inside Claude (signed in) to analyze photos and keep your log. Right now it runs in preview mode and nothing is saved.';
+  else if (S.mode === 'memory') t = web ? 'This browser blocked on-device storage, so entries only last until you close the app. Private Browsing can cause this.' : 'Couldn\u2019t reach your saved log, so entries only last until you close this page. Reopen it from Claude while signed in.';
+  else if (web && cl.needsInstallHint && cl.needsInstallHint()) { t = 'On iPhone: tap Share, then Add to Home Screen, and open Plate from there. iOS keeps its data and your API key separate from Safari, so do the setup inside the Home Screen app.'; btn = '<button class="lnk" data-act="hint-x">Dismiss</button>'; }
+  else if (web && !cl.hasKey()) { t = 'Photo analysis is off until you add your Anthropic API key.'; btn = '<button class="lnk" data-act="open-key">Add key</button>'; }
+  else if (S.denied) t = 'Claude access was declined for this page, so photos can\u2019t be analyzed. Reopen it and tap Allow.';
+  else if (S.caps.sample === null || S.caps.img === null) t = 'Photo analysis isn\u2019t available in this view. You can still log meals by typing them.';
+  return t ? '<div class="banner">' + esc(t) + (btn ? ' ' + btn : '') + '</div>' : '';
+}
+function busyHTML(){
+  var b = S.busy; if (!b) return '';
+  var pv = b.preview ? '<img alt="" src="' + esc(b.preview) + '">' : I.plate;
+  return '<div class="card busy"><div class="bimg">' + pv + '<div class="shim"></div></div>' +
+    '<div class="btxt"><b id="busyStage">' + esc(b.stage) + '</b><span id="busyEl">' + Math.round((Date.now() - b.t0) / 1000) + 's \u00B7 keep this screen open</span></div>' +
+    '<button class="btn" data-act="cancel">Cancel</button></div>';
+}
+function failHTML(){
+  var f = S.failed; if (!f) return '';
+  var acts = '';
+  if (f.kind === 'analyze' && f.canRetry) acts += '<button class="btn pri" data-act="retry">Retry</button>';
+  if (f.kind === 'save') acts += '<button class="btn pri" data-act="retry">Retry save</button>';
+  if (f.kind === 'analyze' && ['no_key', 'bad_key', 'bad_model'].indexOf(f.code) >= 0) acts += '<button class="btn pri" data-act="open-key">Open settings</button>';
+  if (f.kind === 'analyze' || f.kind === 'notfood') acts += '<button class="btn" data-act="fail-manual">Log it manually</button>';
+  acts += '<button class="btn" data-act="dismiss">Dismiss</button>';
+  return '<div class="card fail"><div class="btxt"><b>Didn\u2019t go through</b><span>' + esc(f.message) + '</span><div class="acts">' + acts + '</div></div></div>';
+}
+function todayHTML(){
+  var key = dayKey(Date.now());
+  var list = S.meals.filter(function(m){ return (m.day || dayKey(m.ts)) === key; }).sort(function(a, b){ return b.ts - a.ts; });
+  var t = totals(list), goal = S.settings.goal;
+  var C = 2 * Math.PI * 62, pct = Math.min(1, t.k / goal), left = goal - t.k;
+  var kp = t.p * 4, kc = t.c * 4, kf = t.f * 9, ks = kp + kc + kf;
+  var share = function(x){ return ks ? Math.round(x / ks * 100) : 0; };
+  var macro = function(name, g, kcal, color){
+    return '<div class="mrow"><div class="mh"><b>' + name + '</b><span>' + g + ' g' + (ks ? ' \u00B7 ' + share(kcal) + '%' : '') + '</span></div><div class="bar-t"><i style="width:' + share(kcal) + '%;background:var(' + color + ')"></i></div></div>';
+  };
+  var pgoal = S.settings.protein || 80;
+  var protRow = '<div class="mrow"><div class="mh"><b>Protein</b><span>' + t.p + ' / ' + pgoal + ' g</span></div><div class="bar-t"><i style="width:' + Math.min(100, Math.round(t.p / pgoal * 100)) + '%;background:var(--p)"></i></div></div>';
+  var html = busyHTML() + failHTML();
+  html += '<div class="card hero"><div class="ring' + (left < 0 ? ' over' : '') + '"><svg viewBox="0 0 148 148"><circle class="trk" cx="74" cy="74" r="62" fill="none" stroke-width="14"/>' +
+    '<circle class="prg" cx="74" cy="74" r="62" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + (C * (1 - pct)).toFixed(2) + '"/></svg>' +
+    '<div class="ctr"><b>' + fmt(t.k) + '</b><span>of ' + fmt(goal) + ' kcal</span></div></div>' +
+    '<div class="mac"><span class="pill' + (left < 0 ? ' over' : '') + '">' + (left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over') + '</span>' +
+    protRow + macro('Carbs', t.c, kc, '--c') + macro('Fat', t.f, kf, '--f') + '</div></div>';
+  html += recentsHTML();
+  var loading = (S.mode === 'boot' || (S.mode === 'db' && !S.loaded)) && !S.meals.length;
+  if (list.length) {
+    html += '<div class="sec-h"><span>Today\u2019s meals</span><span>' + list.length + '</span></div>' + list.map(function(m){ return mealCard(m); }).join('');
+  } else if (loading) {
+    html += '<div class="card empty"><p>Loading your log\u2026</p></div>';
+  } else if (!S.busy) {
+    if (S.meals.length) html += '<div class="card empty"><h3>Nothing logged yet today</h3><p>Snap a meal, or tap one under Log again.</p></div>';
+    else html += '<div class="card empty">' + I.plateBig + '<h3>Nothing logged yet</h3><p>Tap <b>Snap meal</b>, take a photo, and that\u2019s it. I\u2019ll estimate and save it.</p>' +
+      '<div class="tips"><div><i>\uD83C\uDF7D\uFE0F</i><span>Shoot a thali from above so every katori shows, with a roti, spoon or your hand in frame for scale.</span></div>' +
+      '<div><i>\uD83E\uDDC8</i><span>Ghee and oil are invisible in photos. Tell Plate how you cook once, in settings under Your kitchen.</span></div>' +
+      '<div><i>\u2615</i><span>Chai, milk and curd count too. Tap the pencil, type \u201Cchai with 1 tsp sugar\u201D, and next time it is one tap under Log again.</span></div>' +
+      '<div><i>\uD83C\uDFF7\uFE0F</i><span>For packaged food, include the nutrition label.</span></div></div></div>';
+  }
+  html += nudgeHTML();
+  return html;
+}
+function recentsHTML(){
+  if (!S.meals.length) return '';
+  var by = {}, now = Date.now();
+  S.meals.forEach(function(m){
+    if (now - m.ts > 60 * 864e5) return;
+    var k = String(m.name || '').trim().toLowerCase(); if (!k) return;
+    var r = by[k] || (by[k] = {n: 0, m: m});
+    r.n++; if (m.ts > r.m.ts) r.m = m;
+  });
+  var rows = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return b.n - a.n || b.m.ts - a.m.ts; }).slice(0, 8);
+  if (!rows.length) return '';
+  return '<div class="sec-h" style="margin-bottom:6px"><span>Log again</span><span></span></div><div class="rec">' + rows.map(function(r){
+    var m = r.m;
+    return '<button class="rc" data-act="again" data-id="' + esc(m.id) + '">' + thumbHTML(m, 'sm') + '<span class="rt"><b>' + esc(m.name) + '</b><small>' + fmt(eff(m, 'kcal')) + ' kcal</small></span></button>';
+  }).join('') + '</div>';
+}
+function nudgeHTML(){
+  if (S.settings.kitchen || S.settings.nudge || !S.meals.length || S.busy) return '';
+  return '<div class="card nudge"><b>Sharper estimates in 20 seconds</b><span>A photo cannot see ghee, oil or how big your katori is. Tell Plate once how you cook.</span>' +
+    '<div class="acts"><button class="btn pri" data-act="nudge-go">Set up my kitchen</button><button class="btn" data-act="nudge-x">Not now</button></div></div>';
+}
+function chartSVG(tt, goal, todayK, o){
+  o = o || {};
+  var isP = o.kind === 'protein';          // tt[i].kcal is the plotted value: kcal, or grams of protein
+  var W = 336, H = 150, pl = 6, pr = 6, pt = 16, pb = 22;
+  var max = Math.max.apply(null, [goal * 1.25, 1].concat(tt.map(function(t){ return t.kcal; })));
+  var bw = (W - pl - pr) / tt.length;
+  var y = function(v){ return pt + (H - pt - pb) * (1 - v / max); };
+  var bars = '', labels = '';
+  tt.forEach(function(t, i){
+    var x = pl + i * bw + bw * 0.18, w = bw * 0.64;
+    var yy = t.kcal > 0 ? y(t.kcal) : H - pb - 2, h = (H - pb) - yy;
+    var cls = 'bar' + (isP ? ' pr' + (t.kcal >= goal ? ' hit' : '') : (t.kcal > goal ? ' over' : '')) + (t.k === todayK ? ' today' : '') + (t.kcal ? '' : ' empty');
+    bars += '<rect class="' + cls + '" x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3.5"/>';
+    labels += '<text class="ax" x="' + (pl + i * bw + bw / 2).toFixed(1) + '" y="' + (H - 7) + '" text-anchor="middle">' + 'SMTWTFS'.charAt(keyToDate(t.k).getDay()) + '</text>';
+  });
+  var gy = y(goal).toFixed(1);
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (isP ? 'Protein' : 'Calories') + ' per day for the last 14 days">' + bars +
+    '<line class="goal" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + gy + '" y2="' + gy + '"/>' + labels +
+    '<text class="gl" x="' + (W - pr) + '" y="' + (gy - 4) + '" text-anchor="end">goal ' + fmt(goal) + (isP ? ' g' : '') + '</text></svg>';
+}
+function historyHTML(){
+  var goal = S.settings.goal, pg = S.settings.protein || 80, by = groupByDay(), now = new Date(), todayK = dayKey(now);
+  var keys = Object.keys(by).sort().reverse();
+  if (!keys.length) return '<div class="card empty">' + I.plateBig + '<h3>No history yet</h3><p>Your days will show up here as you log meals.</p></div>';
+  var days = []; for (var i = 13; i >= 0; i--) days.push(dayKey(addDays(now, -i)));
+  var tt = days.map(function(k){ var t = totals(by[k] || []); return {k: k, kcal: t.k, p: t.p}; });
+  var pt = tt.map(function(t){ return {k: t.k, kcal: t.p}; });
+  var last7 = tt.slice(-7).filter(function(t){ return t.kcal > 0; });
+  var avg = last7.length ? Math.round(last7.reduce(function(a, t){ return a + t.kcal; }, 0) / last7.length) : 0;
+  var avgP = last7.length ? Math.round(last7.reduce(function(a, t){ return a + t.p; }, 0) / last7.length) : 0;
+  var logged = tt.filter(function(t){ return t.kcal > 0; }).length;
+  var diff = avg - goal;
+  var html = '<div class="sum">' +
+    '<div class="card"><b>' + (avg ? fmt(avg) : '\u2014') + '</b><span>7-day avg</span></div>' +
+    '<div class="card"><b>' + (avg ? (diff > 0 ? '+' : '') + fmt(diff) : '\u2014') + '</b><span>avg vs goal</span></div>' +
+    '<div class="card"><b>' + (avgP ? avgP + ' g' : '\u2014') + '</b><span>avg protein</span></div></div>';
+  html += '<div class="card chart" data-chart="kcal">' + chartSVG(tt, goal, todayK) + '</div>';
+  html += '<div class="sec-h" style="margin-top:6px"><span>Protein per day</span><span>goal ' + pg + ' g</span></div>';
+  html += '<div class="card chart" data-chart="protein">' + chartSVG(pt, pg, todayK, {kind: 'protein'}) + '</div>';
+  html += '<div class="sec-h"><span>Days</span><span>' + logged + '/14 logged</span></div>';
+  html += keys.map(function(k){
+    var list = by[k].slice().sort(function(a, b){ return b.ts - a.ts; });
+    var t = totals(list), d = t.k - goal, open = !!S.openDays[k];
+    return '<div class="card dayc"><button class="day" data-act="day" data-k="' + esc(k) + '"><span><b>' + esc(dayLabel(k)) + '</b><small>' + list.length + ' meal' + (list.length === 1 ? '' : 's') + ' \u00B7 ' + t.p + ' g protein</small></span>' +
+      '<span class="dk' + (d > 0 ? ' over' : '') + '"><b>' + fmt(t.k) + '</b><small>' + (d > 0 ? '+' : '') + fmt(d) + ' vs goal</small></span></button>' +
+      (open ? list.map(function(m){ return mealCard(m, true); }).join('') : '') + '</div>';
+  }).join('');
+  return html;
+}
+function sheetMealHTML(m){
+  var sh = S.sheet, k = eff(m, 'kcal'), rp = rangePct(m), x = mult(m);
+  var confTxt = {high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence'}[m.conf] || '';
+  var rng = rp ? 'Likely ' + fmt(eff(m, 'low')) + '\u2013' + fmt(eff(m, 'high')) + ' kcal \u00B7 ' + confTxt + ' (\u00B1' + rp + '%)' :
+    (m.edited ? 'Edited by you' : (m.src === 'manual' ? 'Entered by you' : ''));
+  var items = (!m.edited && m.items && m.items.length) ? '<div class="lbl">On the plate \u00B7 tap \u2212 or + to fix</div><div class="items">' + m.items.map(function(i, n){
+    var ix = itemX(i), off = ix === 0;
+    return '<div class="it' + (off ? ' off' : '') + '"><span class="n">' + esc(i.n) + '<small>' + esc(itemQty(i, x)) + '</small></span>' +
+      '<span class="stp"><button data-act="istep" data-i="' + n + '" data-d="-1" aria-label="Less ' + esc(i.n) + '">\u2212</button><button data-act="istep" data-i="' + n + '" data-d="1" aria-label="More ' + esc(i.n) + '">+</button></span>' +
+      '<span class="k">' + Math.round(i.k * ix * x) + '</span></div>';
+  }).join('') + '</div>' : '';
+  var fixing = S.fixing && S.fixing.id === m.id;
+  return '<div class="sh-head">' + thumbHTML(m, 'big') + '<div class="sh-title"><h2>' + esc(m.name) + '</h2><div class="sh-sub">' + esc(dayLabel(m.day || dayKey(m.ts))) + ' \u00B7 ' + fmtTime(m.ts) + (m.src === 'text' ? ' \u00B7 from description' : m.src === 'repeat' ? ' \u00B7 logged again' : '') + ({home: ' \u00B7 Home-style', restaurant: ' \u00B7 Restaurant-style', packaged: ' \u00B7 Packaged'}[m.set] || '') + '</div></div>' +
+    '<button class="x" data-act="close" aria-label="Close">' + I.x + '</button></div>' +
+    '<div class="bigk"><b>' + fmt(k) + '</b><span>kcal</span></div>' + (rng ? '<div class="rng">' + esc(rng) + '</div>' : '') +
+    '<div class="chips"><div class="chip"><b style="color:var(--p)">' + eff(m, 'p') + ' g</b>Protein</div><div class="chip"><b style="color:var(--c)">' + eff(m, 'c') + ' g</b>Carbs</div><div class="chip"><b style="color:var(--f)">' + eff(m, 'f') + ' g</b>Fat</div></div>' +
+    '<div class="lbl">Portion eaten</div><div class="seg">' + MULTS.map(function(a){ return '<button data-act="mult" data-v="' + a[0] + '" class="' + (x === a[0] ? 'on' : '') + '">' + a[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="lbl">Meal</div><div class="seg">' + MEALS.map(function(a){ return '<button data-act="mtype" data-v="' + a[0] + '" class="' + (m.meal === a[0] ? 'on' : '') + '">' + a[1] + '</button>'; }).join('') + '</div>' +
+    items + (m.why && !m.edited ? '<div class="why">' + esc(m.why) + '</div>' : '') +
+    '<div class="lbl">Not right? Tell me what\u2019s different</div>' +
+    '<div class="qf">' + QF.map(function(q){ return '<button data-act="qf" data-t="' + esc(q[1]) + '">' + esc(q[0]) + '</button>'; }).join('') + '</div>' +
+    '<div class="fix"><input id="fixNote" data-keep type="text" maxlength="300" enterkeyhint="send" autocomplete="off" placeholder="e.g. 3 rotis, no ghee in the dal"' + (fixing ? ' disabled' : '') + '><button class="btn pri" data-act="fix"' + (fixing ? ' disabled' : '') + '>' + (fixing ? 'Updating\u2026' : 'Update') + '</button></div>' +
+    (S.fixErr ? '<div class="err">' + esc(S.fixErr) + '</div>' : '') +
+    '<div class="acts2"><button class="btn" data-act="edit">Edit numbers</button><button class="btn dng" data-act="del">' + (sh.confirmDel ? 'Tap again to delete' : 'Delete') + '</button></div>';
+}
+function sheetEditHTML(m){
+  var sh = S.sheet;
+  return '<div class="sh-head"><div class="sh-title"><h2>Edit entry</h2></div><button class="x" data-act="edit-cancel" aria-label="Close">' + I.x + '</button></div>' +
+    '<label>Name<input id="edName" data-keep type="text" maxlength="80" value="' + esc(m.name) + '"></label>' +
+    '<div class="g2"><label>Calories<input id="edK" data-keep type="number" inputmode="numeric" min="0" value="' + eff(m, 'kcal') + '"></label>' +
+    '<label>When<input id="edWhen" data-keep type="datetime-local" value="' + localInput(m.ts) + '"></label></div>' +
+    '<div class="g3"><label>Protein g<input id="edP" data-keep type="number" inputmode="numeric" min="0" value="' + eff(m, 'p') + '"></label>' +
+    '<label>Carbs g<input id="edC" data-keep type="number" inputmode="numeric" min="0" value="' + eff(m, 'c') + '"></label>' +
+    '<label>Fat g<input id="edF" data-keep type="number" inputmode="numeric" min="0" value="' + eff(m, 'f') + '"></label></div>' +
+    (sh.err ? '<div class="err">' + esc(sh.err) + '</div>' : '') +
+    '<div class="acts2"><button class="btn" data-act="edit-cancel">Cancel</button><button class="btn pri" data-act="edit-save">Save</button></div>';
+}
+function sheetManualHTML(){
+  var sh = S.sheet, canAI = S.caps.sample !== null;
+  return '<div class="sh-head"><div class="sh-title"><h2>Log a meal</h2><div class="sh-sub">No photo needed</div></div><button class="x" data-act="close" aria-label="Close">' + I.x + '</button></div>' +
+    (S.pendingThumb ? '<div class="pthumb"><img class="thumb" alt="" src="' + esc(S.pendingThumb) + '"><span class="hint">Your photo will be attached.</span></div>' : '') +
+    '<label>What did you eat?<textarea id="mText" data-keep rows="2" maxlength="300" placeholder="e.g. 2 phulka, dal tadka, 1 katori curd, or chai with 1 tsp sugar"></textarea></label>' +
+    '<div class="g2"><label>Calories<input id="mK" data-keep type="number" inputmode="numeric" min="0" placeholder="' + (canAI ? 'Auto' : 'kcal') + '"></label>' +
+    '<label>When<input id="mWhen" data-keep type="datetime-local" value="' + localInput(Date.now()) + '"></label></div>' +
+    '<div class="hint">' + (canAI ? 'Leave calories empty and Claude will estimate from your description.' : 'Enter the calories yourself.') + '</div>' +
+    '<details><summary>Macros (optional)</summary><div class="g3"><label>Protein g<input id="mP" data-keep type="number" inputmode="numeric" min="0"></label>' +
+    '<label>Carbs g<input id="mC" data-keep type="number" inputmode="numeric" min="0"></label><label>Fat g<input id="mF" data-keep type="number" inputmode="numeric" min="0"></label></div></details>' +
+    (sh.err ? '<div class="err">' + esc(sh.err) + '</div>' : '') +
+    '<div class="acts2"><button class="btn pri" data-act="manual-save">Log it</button></div>';
+}
+function focusKey(){ var k = $('#keyIn'); if (k) { try { k.scrollIntoView({block: 'center'}); k.focus({preventScroll: true}); } catch (e) {} } }
+async function saveKeyAndTest(){
+  var cl = window.claude; if (!cl || !cl.standalone || S.keyBusy) return;
+  var el = $('#keyIn'), v = el ? el.value.trim() : '';
+  if (v) {
+    if (!/^sk-ant-/.test(v)) { S.keyMsg = 'That does not look like an Anthropic key. It should start with sk-ant-.'; renderSheet(); return; }
+    cl.setKey(v); el.value = '';
+  }
+  if (!cl.hasKey()) { S.keyMsg = 'Paste your API key first.'; renderSheet(); return; }
+  S.keyBusy = true; S.keyMsg = 'Testing\u2026'; render();
+  var r = await cl.testKey();
+  S.keyBusy = false; S.keyMsg = r.ok ? 'Key works. Photo analysis is on.' : errMsg(r.code); render();
+}
+async function doBackup(){
+  var cl = window.claude, dl = S.caps.downloads; if (!cl || !cl.backup || !dl) return;
+  try { var b = await cl.backup(); await dl.save({filename: 'plate-backup-' + dayKey(Date.now()) + '.json', data: JSON.stringify(b)}); toast('Backup ready'); }
+  catch (e) { if (!e || e.code !== 'declined') toast('Couldn\u2019t create the backup'); }
+}
+async function doRestore(file){
+  var cl = window.claude; if (!file || !cl || !cl.restore) return;
+  try { var n = await cl.restore(JSON.parse(await file.text())); toast('Restored ' + n + (n === 1 ? ' entry' : ' entries')); }
+  catch (e) { toast('That file is not a Plate backup'); }
+}
+function standaloneSettingsHTML(){
+  var cl = window.claude; if (!cl || !cl.standalone) return '';
+  var has = cl.hasKey(), md = cl.models();
+  return '<div class="lbl" style="margin-top:20px">Photo analysis</div>' +
+    '<label>Anthropic API key<input id="keyIn" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="' + (has ? 'Saved ' + esc(cl.keyHint()) + '. Paste to replace.' : 'sk-ant-\u2026') + '"></label>' +
+    '<div class="acts2" style="margin-top:10px"><button class="btn pri" data-act="key-save"' + (S.keyBusy ? ' disabled' : '') + '>' + (has ? 'Test key' : 'Save and test') + '</button>' + (has ? '<button class="btn" data-act="key-remove">Remove key</button>' : '') + '</div>' +
+    '<div class="hint" id="keyMsg">' + esc(S.keyMsg || '') + '</div>' +
+    '<div class="hint">Your key stays on this device, and photos go straight from your phone to Anthropic. It bills to your Anthropic API account, which is separate from a Claude subscription. Set a monthly spend limit in the Anthropic Console.</div>' +
+    '<details><summary>Models</summary><label>Standard<input id="mdlStd" data-keep type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(md.std) + '"></label>' +
+    '<label>Max accuracy<input id="mdlMax" data-keep type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(md.max) + '"></label>' +
+    '<div class="hint">Max accuracy costs several times more per photo. Change these only if Anthropic retires a model.</div></details>' +
+    '<div class="lbl" style="margin-top:20px">Your data</div>' +
+    '<div class="hint" style="margin-top:0">Entries live only on this device. Back them up now and then.</div>' +
+    '<div class="acts2" style="margin-top:10px"><button class="btn" data-act="backup">Back up data</button><button class="btn" data-act="restore">Restore backup</button></div>' +
+    '<input class="vh" id="fileRestore" type="file" accept="application/json,.json" tabindex="-1">';
+}
+function sheetSettingsHTML(){
+  var cl = window.claude, sa = standaloneSettingsHTML(), core = sheetSettingsCore();
+  if (!sa) return core;
+  var i = core.indexOf('</button></div>') + '</button></div>'.length;
+  return cl.hasKey() ? core + sa : core.slice(0, i) + sa + core.slice(i);
+}
+function sheetSettingsCore(){
+  var s = S.settings;
+  return '<div class="sh-head"><div class="sh-title"><h2>Settings</h2></div><button class="x" data-act="close" aria-label="Close">' + I.x + '</button></div>' +
+    '<div class="g2"><label>Calorie goal<input id="goalIn" data-keep type="number" inputmode="numeric" min="800" max="8000" step="50" value="' + s.goal + '"></label>' +
+    '<label>Protein goal (g)<input id="protIn" data-keep type="number" inputmode="numeric" min="20" max="300" step="5" value="' + s.protein + '"></label></div>' +
+    '<div class="lbl">Diet</div><div class="seg">' + DIETS.map(function(a){ return '<button data-act="diet" data-v="' + a[0] + '" class="' + (s.diet === a[0] ? 'on' : '') + '">' + a[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="hint" style="margin-top:6px">Veg means no meat, fish or egg (dairy is fine). Plate assumes this for every estimate.</div>' +
+    '<label>Your kitchen<textarea id="kitchenIn" data-keep rows="4" maxlength="600" placeholder="e.g. Katori = 150 ml. Phulka 6 inch, no ghee. About 1 tsp oil per serving of dal and sabzi. Toned milk.">' + esc(s.kitchen) + '</textarea></label>' +
+    '<div class="hint" style="margin:6px 0 8px">Photos cannot see ghee, oil or how big your katori is. Tell Plate once and every estimate uses it. Tap a starter, then fill in the blank.</div>' +
+    '<div class="qf">' + SUGG.map(function(q){ return '<button data-act="sugg" data-t="' + esc(q[1]) + '">+ ' + esc(q[0]) + '</button>'; }).join('') + '</div>' +
+    '<div class="swrow"><div><b>Max accuracy</b><div class="hint" style="margin:2px 0 0">' + (window.claude && window.claude.standalone ? 'Uses a larger model that thinks harder. Slower, and several times the cost per photo. Best for restaurant gravies and mixed plates.' : 'Slower (up to a minute). Claude thinks longer about each photo. Best for restaurant gravies and mixed plates.') + '</div></div>' +
+    '<button class="sw' + (s.max ? ' on' : '') + '" data-act="toggle-max" role="switch" aria-checked="' + !!s.max + '" aria-label="Max accuracy"><i></i></button></div>' +
+    (S.caps.downloads ? '<button class="btn wide" data-act="export">Export log as CSV</button>' : '') +
+    '<div class="hint" style="margin-top:16px">Photo estimates are usually within 15\u201330% of the truth, and Indian food is harder than most: ghee and oil are invisible, and a katori can hold anywhere from 115 to 360 ml. Shoot thalis from above so every katori shows, and fix quantities with the \u2212 and + buttons on each entry.</div>' +
+    '<div class="hint">' + (window.claude && window.claude.standalone ? 'Your log is stored only on this device. Each photo is billed to your Anthropic API account.' : 'Your log is private to you. Each photo uses a little of your own Claude usage.') + '</div>';
+}
+function renderSheet(){
+  var host = $('#sheetHost');
+  if (!S.sheet) { host.innerHTML = ''; return; }
+  var old = $('.sheet', host), st = old ? old.scrollTop : 0, first = !old;
+  $$('[data-keep]', host).forEach(function(el){ S.keep[el.id] = el.value; });
+  var ae = document.activeElement, aid = (ae && ae !== document.body && host.contains(ae)) ? ae.id : '', ss = null, se = null;
+  if (aid) { try { ss = ae.selectionStart; se = ae.selectionEnd; } catch (e) {} }
+  var sh = S.sheet, body = '';
+  if (sh.type === 'meal') { var m = byId(sh.id); if (!m) { closeSheet(); return; } body = sh.mode === 'edit' ? sheetEditHTML(m) : sheetMealHTML(m); }
+  else if (sh.type === 'manual') body = sheetManualHTML();
+  else if (sh.type === 'settings') body = sheetSettingsHTML();
+  host.innerHTML = '<div class="scrim' + (first ? '' : ' still') + '" data-act="close"></div><div class="sheet' + (first ? '' : ' still') + '" role="dialog" aria-modal="true"><div class="grab"></div>' + body + '</div>';
+  $$('[data-keep]', host).forEach(function(el){ if (S.keep[el.id] !== undefined) el.value = S.keep[el.id]; });
+  if (st) $('.sheet', host).scrollTop = st;
+  if (aid) {
+    var ne = document.getElementById(aid);
+    if (ne) { try { ne.focus({preventScroll: true}); if (ss != null && ne.setSelectionRange) ne.setSelectionRange(ss, se); } catch (e) {} }
+  }
+  var cm = sh.type === 'meal' ? byId(sh.id) : null;
+  S.sheetSig = cm ? JSON.stringify(cm) : '';
+}
+function openSheet(s){
+  S.sheet = s; S.keep = {}; S.fixErr = ''; S.touched = false; hideToast();
+  $('#sheetHost').innerHTML = '';
+  document.body.classList.add('noscroll');
+  renderSheet();
+}
+function closeSheet(){
+  if (S.sheet && S.sheet.type === 'settings') flushSettingsInputs();
+  flushAll();
+  S.sheet = null; S.keep = {}; S.pendingThumb = ''; S.fixErr = '';
+  document.body.classList.remove('noscroll');
+  $('#sheetHost').innerHTML = '';
+}
+function toast(msg, act){
+  var el = $('#toast'); clearTimeout(S.toastT);
+  el.innerHTML = '<span>' + esc(msg) + '</span>' + (act ? '<button data-act="toast-act" data-kind="' + esc(act.kind || 'open') + '" data-id="' + esc(act.id) + '">' + esc(act.label) + '</button>' : '');
+  el.classList.add('show');
+  S.toastT = setTimeout(hideToast, act ? 5200 : 3200);
+}
+function hideToast(){ $('#toast').classList.remove('show'); }
+function renderView(){
+  $('#dateLabel').textContent = new Date().toLocaleDateString([], {weekday: 'long', month: 'long', day: 'numeric'});
+  $('#title').textContent = S.tab === 'today' ? 'Today' : 'History';
+  $$('.tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === S.tab); });
+  $('#view').innerHTML = bannerHTML() + (S.tab === 'today' ? todayHTML() : historyHTML());
+  $('#btnSnap').disabled = !!S.busy; $('#btnLib').disabled = !!S.busy;
+}
+function render(){ renderView(); if (S.sheet) renderSheet(); }
+
+/* ================= events ================= */
+function pick(kind){
+  if (S.busy) return;
+  var inp = $(kind === 'cam' ? '#fileCam' : '#fileLib');
+  inp.value = ''; inp.click();
+}
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]'); if (!el) return;
+  var a = el.dataset.act, sh = S.sheet;
+  switch (a) {
+    case 'tab': S.tab = el.dataset.tab; render(); window.scrollTo(0, 0); break;
+    case 'snap': pick('cam'); break;
+    case 'lib': pick('lib'); break;
+    case 'manual': openSheet({type: 'manual'}); break;
+    case 'settings': openSheet({type: 'settings'}); break;
+    case 'open': openSheet({type: 'meal', id: el.dataset.id, mode: 'view'}); break;
+    case 'close': closeSheet(); break;
+    case 'cancel': if (S.busy) { S.busy.ctl.abort(); stopBusy(); render(); } break;
+    case 'retry':
+      if (S.failed && S.failed.kind === 'analyze') { var inp = S.failed.input; S.failed = null; analyze(inp); }
+      else if (S.failed && S.failed.kind === 'save') {
+        var f = S.failed; S.failed = null; render();
+        saveMeal(f.doc, f.blob).then(function(id){ toast('Saved \u00B7 ' + fmt(f.doc.kcal) + ' kcal', {label: 'Details', id: id}); })
+          .catch(function(err){ S.failed = {kind: 'save', message: dbMsg(err), doc: f.doc, blob: f.blob}; render(); });
+      }
+      break;
+    case 'dismiss': S.failed = null; render(); break;
+    case 'fail-manual': S.pendingThumb = (S.failed && S.failed.input && S.failed.input.thumb) || ''; S.failed = null; render(); openSheet({type: 'manual'}); break;
+    case 'mult': if (sh && sh.type === 'meal') patchMeal(sh.id, {mult: Number(el.dataset.v)}).catch(function(){ toast('Couldn\u2019t save that change'); }); break;
+    case 'mtype': if (sh && sh.type === 'meal') patchMeal(sh.id, {meal: el.dataset.v}).catch(function(){ toast('Couldn\u2019t save that change'); }); break;
+    case 'edit': if (sh) { sh.mode = 'edit'; sh.err = ''; S.keep = {}; renderSheet(); } break;
+    case 'edit-cancel': if (sh) { sh.mode = 'view'; sh.err = ''; S.keep = {}; renderSheet(); } break;
+    case 'edit-save': saveEdit(); break;
+    case 'del':
+      if (sh && sh.type === 'meal') {
+        if (!sh.confirmDel) { sh.confirmDel = true; renderSheet(); setTimeout(function(){ if (S.sheet === sh && sh.confirmDel) { sh.confirmDel = false; renderSheet(); } }, 3500); }
+        else { var id = sh.id; closeSheet(); removeMeal(id).then(function(){ toast('Deleted'); }).catch(function(){ toast('Couldn\u2019t delete that entry'); }); }
+      }
+      break;
+    case 'fix': fixMeal(); break;
+    case 'manual-save': saveManual(); break;
+    case 'toggle-max': saveSettings({max: !S.settings.max}); break;
+    case 'export': exportCsv(); break;
+    case 'day': S.openDays[el.dataset.k] = !S.openDays[el.dataset.k]; render(); break;
+    case 'toast-act':
+      hideToast();
+      if (el.dataset.kind === 'undo') removeMeal(el.dataset.id).then(function(){ toast('Removed'); }).catch(function(){ toast('Couldn\u2019t undo that'); });
+      else openSheet({type: 'meal', id: el.dataset.id, mode: 'view'});
+      break;
+    case 'istep': if (sh && sh.type === 'meal') stepItem(sh.id, Number(el.dataset.i), Number(el.dataset.d)); break;
+    case 'qf':
+      var qi = $('#fixNote');
+      if (qi && !qi.disabled) qi.value = (qi.value && !/\s$/.test(qi.value) ? qi.value + ' ' : qi.value) + el.dataset.t;
+      break;
+    case 'again': logAgain(el.dataset.id); break;
+    case 'diet': saveSettings({diet: el.dataset.v}); break;
+    case 'sugg':
+      var ta = $('#kitchenIn');
+      if (ta) {
+        ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + ' ' : ta.value) + el.dataset.t;
+        S.touched = true; ta.focus(); var bi = ta.value.lastIndexOf('___'); if (bi >= 0) ta.setSelectionRange(bi, bi + 3);
+        clearTimeout(S.kitT); S.kitT = setTimeout(saveKitchenNow, 1200);
+      }
+      break;
+    case 'nudge-go': saveSettings({nudge: true}, true); openSheet({type: 'settings'}); var kt = $('#kitchenIn'); if (kt) kt.focus({preventScroll: true}); break;
+    case 'nudge-x': saveSettings({nudge: true}); break;
+    case 'open-key': S.failed = null; openSheet({type: 'settings'}); focusKey(); break;
+    case 'hint-x': if (window.claude && window.claude.dismissInstallHint) window.claude.dismissInstallHint(); render(); break;
+    case 'key-save': saveKeyAndTest(); break;
+    case 'key-remove': if (window.claude && window.claude.clearKey) { window.claude.clearKey(); S.keyMsg = 'Key removed.'; render(); } break;
+    case 'backup': doBackup(); break;
+    case 'restore': var fr = $('#fileRestore'); if (fr) { fr.value = ''; fr.click(); } break;
+  }
+});
+document.addEventListener('change', function(e){
+  var id = e.target.id;
+  if (id === 'goalIn') { var g = clampGoal(e.target.value); e.target.value = g; saveSettings({goal: g}, true); }
+  else if (id === 'protIn') { var pv = clampProtein(e.target.value); e.target.value = pv; saveSettings({protein: pv}, true); }
+  else if (id === 'kitchenIn') saveKitchenNow();
+  else if (id === 'mdlStd' || id === 'mdlMax') { var c2 = window.claude; if (c2 && c2.setModels) c2.setModels({std: ($('#mdlStd') || {}).value, max: ($('#mdlMax') || {}).value}); }
+  else if (id === 'fileRestore') doRestore(e.target.files && e.target.files[0]);
+});
+document.addEventListener('input', function(e){
+  var id = e.target.id;
+  if (id === 'goalIn' || id === 'protIn' || id === 'kitchenIn') S.touched = true;
+  if (id === 'kitchenIn') { clearTimeout(S.kitT); S.kitT = setTimeout(saveKitchenNow, 1200); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && S.sheet) closeSheet();
+  if (e.key === 'Enter' && e.target && e.target.id === 'fixNote') { e.preventDefault(); fixMeal(); }
+});
+$('#fileCam').addEventListener('change', function(e){ onFile(e.target.files && e.target.files[0], false); });
+$('#fileLib').addEventListener('change', function(e){ onFile(e.target.files && e.target.files[0], true); });
+document.addEventListener('visibilitychange', function(){ if (document.hidden) flushAll(); else render(); });
+window.addEventListener('pagehide', flushAll);
+
+/* ================= boot ================= */
+async function init(){
+  $('#btnSettings').innerHTML = I.sliders;
+  $('#btnLib').innerHTML = I.img;
+  $('#btnManual').innerHTML = I.pen;
+  $('#btnSnap').innerHTML = I.cam + '<span>Snap meal</span>';
+  var cl = window.claude;
+  if (!cl || typeof cl.use !== 'function') {
+    S.mode = 'standalone'; S.caps.sample = null; S.caps.img = null; S.sampleP = Promise.resolve(); S.readyRes(); render(); return;
+  }
+  var safe = function(n){ try { return Promise.resolve(cl.use(n)).catch(function(){ return null; }); } catch (e) { return Promise.resolve(null); } };
+  S.sampleP = safe('sample').then(async function(s){
+    S.caps.sample = s;
+    if (s) { try { var l = await s.limits(); S.caps.img = (l && l.images) ? l.images : null; } catch (e) { S.caps.img = null; } }
+    else S.caps.img = null;
+    render();
+  });
+  safe('downloads').then(function(d){ S.caps.downloads = d; if (S.sheet && S.sheet.type === 'settings') renderSheet(); });
+  render();
+  var res = await Promise.all([safe('db'), safe('user')]);
+  var uid = null;
+  if (res[1]) { try { uid = await res[1].id(); } catch (e) {} }
+  if (res[0] && uid) { S.db = res[0]; S.prof = S.db.doc('data/users/' + uid + '/profile'); S.mode = 'db'; subscribe(); }
+  else S.mode = 'memory';
+  S.readyRes();
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>
