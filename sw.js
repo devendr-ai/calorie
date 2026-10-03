@@ -1,6 +1,6 @@
 /* Plate service worker: keeps the app shell available offline.
    It never touches requests to other origins (so the Anthropic API is never cached or intercepted). */
-const CACHE = 'plate-741b333f3d';
+const CACHE = 'plate-27c94d94fa';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

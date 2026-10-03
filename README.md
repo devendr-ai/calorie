@@ -41,9 +41,10 @@ Roughly 2 to 4 cents per photo on Standard (Claude Sonnet 5.5) and several times
 - Your API key is never included in a backup.
 
 ## Updating
-Replace the files on your host with the new copy. Open the app while online and it picks up the update on the next launch.
+Replace the files on your host with the new copy. Then swipe the app away completely and open it again while online. iOS can keep showing the old version until you do.
 
 ## Troubleshooting
+- "Anthropic could not process that request": the card shows Anthropic's exact reason underneath it. The usual causes are an account with no credit yet (Console, Billing), a spend limit that has been reached (Console, Limits), or a key from a workspace without access. After fixing it, open Settings and tap Test key. It sends a tiny test photo and shows Anthropic's reason right there if something is still wrong.
 - "Anthropic rejected that API key": paste it again (it starts with sk-ant-).
 - "balance is empty": add credit in the Console.
 - "model name was not found": Settings, Models, and enter a current model name from Anthropic's docs.

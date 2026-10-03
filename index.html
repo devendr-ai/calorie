@@ -62,6 +62,7 @@ h1{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.02em}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
 .banner{background:var(--warn-soft);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px}
 .lnk{font-weight:700;text-decoration:underline;white-space:nowrap}
+.det{display:block;margin-top:8px;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--muted);background:var(--soft);padding:8px 10px;border-radius:10px;word-break:break-word;-webkit-user-select:text;user-select:text}
 
 /* hero ring */
 .hero{display:flex;align-items:center;gap:16px;padding:16px}
@@ -279,7 +280,7 @@ var LS = {
   set: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
   del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
-var KEY_K = 'plate.apiKey', MODELS_K = 'plate.models', HINT_K = 'plate.installHint';
+var KEY_K = 'plate.apiKey', MODELS_K = 'plate.models', HINT_K = 'plate.installHint', COMPAT_K = 'plate.compat';
 var UID = 'local';
 var API = 'https://api.anthropic.com/v1/messages';
 var DEFAULT_MODELS = {std: 'claude-sonnet-5-5', max: 'claude-opus-5-5'};
@@ -300,6 +301,16 @@ function setModels(m) {
   if (std && std !== DEFAULT_MODELS.std) out.std = std;
   if (max && max !== DEFAULT_MODELS.max) out.max = max;
   if (Object.keys(out).length) LS.set(MODELS_K, JSON.stringify(out)); else LS.del(MODELS_K);
+}
+/* what the API has accepted for this key so far (e.g. no effort field, smaller max_tokens) */
+function getCompat() { try { return JSON.parse(LS.get(COMPAT_K) || '{}') || {}; } catch (e) { return {}; } }
+function setCompat(c) { LS.set(COMPAT_K, JSON.stringify(Object.assign(getCompat(), c))); }
+function clearCompat() { LS.del(COMPAT_K); }
+function applyCompat(body, c) {
+  var b = Object.assign({}, body);
+  if (c.noEffort) delete b.output_config;
+  if (c.maxTokens) b.max_tokens = Math.min(b.max_tokens, c.maxTokens);
+  return b;
 }
 function needsInstallHint() {
   var ios = /iPhone|iPad|iPod/.test(navigator.userAgent || '');
@@ -474,19 +485,23 @@ function parseLoose(t) {
   if (a < 0 || b <= a) throw {code: 'invalid_json', message: 'no json'};
   try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw {code: 'invalid_json', message: 'bad json'}; }
 }
-function apiErr(status, body) {
-  var msg = (body && body.error && body.error.message) || '';
-  if (status === 401 || status === 403) return {code: 'bad_key', message: msg};
-  if (status === 404) return {code: 'bad_model', message: msg};
-  if (status === 413) return {code: 'image_rejected', message: msg};
-  if (status === 429) return {code: 'rate_limited', message: msg};
-  if (status === 529 || status >= 500) return {code: 'overloaded', message: msg};
+function apiErr(status, body, rid) {
+  var e = body && body.error, msg = (e && e.message) || '', type = (e && e.type) || '';
+  var detail = status + (type ? ' ' + type : '') + (msg ? ': ' + msg : '') + (rid ? ' (request ' + rid + ')' : '');
+  var mk = function (code) { return {code: code, message: msg, status: status, detail: detail}; };
+  if (status === 401 || status === 403) return mk('bad_key');
+  if (status === 404) return mk('bad_model');
+  if (status === 413) return mk('image_rejected');
+  if (status === 429) return mk('rate_limited');
+  if (status === 529 || status >= 500) return mk('overloaded');
   if (status === 400) {
-    if (/credit balance|billing|payment/i.test(msg)) return {code: 'no_credit', message: msg};
-    if (/image|media/i.test(msg)) return {code: 'image_rejected', message: msg};
-    return {code: 'bad_request', message: msg};
+    if (/usage limit|spend(ing)? limit|regain access|workspace/i.test(msg)) return mk('usage_limit');
+    if (/credit|balance|billing|payment|purchase|funds/i.test(msg)) return mk('no_credit');
+    if (/disabled|not active|suspended|deactivated/i.test(msg)) return mk('account');
+    if (/image|media/i.test(msg)) return mk('image_rejected');
+    return mk('bad_request');
   }
-  return {code: 'api_error', message: msg};
+  return mk('api_error');
 }
 async function callApi(key, body, signal) {
   var ctl = new AbortController(), timedOut = false, onAbort = function () { ctl.abort(); };
@@ -503,7 +518,7 @@ async function callApi(key, body, signal) {
     });
     var txt = await r.text(), j = null;
     try { j = JSON.parse(txt); } catch (e) {}
-    if (!r.ok) throw apiErr(r.status, j);
+    if (!r.ok) throw apiErr(r.status, j, r.headers.get('request-id'));
     if (!j) throw {code: 'invalid_json', message: 'not json'};
     return j;
   } catch (e) {
@@ -516,15 +531,22 @@ async function callApi(key, body, signal) {
     if (signal) signal.removeEventListener('abort', onAbort);
   }
 }
-/* effort / thinking controls differ by model; if the API rejects them, retry once without. */
+/* If the API calls the request itself malformed, retry with plainer versions (no effort field,
+   then a smaller max_tokens) and remember what it accepted. Rejected requests are not billed. */
 async function callApiFlex(key, body, signal) {
-  try { return await callApi(key, body, signal); }
-  catch (e) {
-    if (e && e.code === 'bad_request' && body.output_config && /effort|output_config|thinking/i.test(e.message || '')) {
-      var b2 = Object.assign({}, body); delete b2.output_config;
-      return await callApi(key, b2, signal);
+  var b0 = applyCompat(body, getCompat());
+  try { return await callApi(key, b0, signal); }
+  catch (e1) {
+    if (!(e1 && e1.code === 'bad_request')) throw e1;
+    var tries = [{noEffort: true}, {noEffort: true, maxTokens: 4096}], seen = [JSON.stringify(b0)];
+    for (var i = 0; i < tries.length; i++) {
+      var b = applyCompat(body, tries[i]), sig = JSON.stringify(b);
+      if (seen.indexOf(sig) >= 0) continue;
+      seen.push(sig);
+      try { var j = await callApi(key, b, signal); setCompat(tries[i]); return j; }
+      catch (e2) { if (!(e2 && e2.code === 'bad_request')) throw e2; e1.detail2 = e2.detail; }
     }
-    throw e;
+    throw e1;
   }
 }
 async function sampleJson(prompt, opts) {
@@ -549,13 +571,31 @@ sample.json = sampleJson;
 sample.limits = async function () {
   return {maxPromptBytes: 1000000, images: {maxCount: 1, maxInputBytes: 5000000, mediaTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']}};
 };
+function tinyJpegB64() {
+  try {
+    var c = document.createElement('canvas'); c.width = 64; c.height = 64;
+    var g = c.getContext('2d'); g.fillStyle = '#c9b79c'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#6b8f5a'; g.fillRect(16, 16, 32, 32);
+    var u = c.toDataURL('image/jpeg', 0.8);
+    return u.slice(u.indexOf(',') + 1);
+  } catch (e) { return ''; }
+}
 async function testKey() {
   var key = getKey();
   if (!key) return {ok: false, code: 'no_key'};
+  clearCompat();
+  var content = [], img = tinyJpegB64();
+  if (img) content.push({type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: img}});
+  content.push({type: 'text', text: 'This is a connection test. Reply with the single word OK.'});
   try {
-    await callApiFlex(key, {model: models().std, max_tokens: 256, output_config: {effort: 'low'}, messages: [{role: 'user', content: 'Reply with the single word OK.'}]}, null);
+    await callApiFlex(key, {model: models().std, max_tokens: 256, output_config: {effort: 'low'}, messages: [{role: 'user', content: content}]}, null);
     return {ok: true};
-  } catch (e) { return {ok: false, code: (e && e.code) || 'api_error'}; }
+  } catch (e) { return {ok: false, code: (e && e.code) || 'api_error', detail: errDetail(e)}; }
+}
+function errDetail(e) {
+  if (!e || !e.detail) return '';
+  var d = String(e.detail);
+  if (e.detail2 && e.detail2 !== e.detail) d += ' | after retrying with a simpler request: ' + e.detail2;
+  return d.slice(0, 420);
 }
 
 /* ---------- exports: share sheet first (iOS), plain download otherwise ---------- */
@@ -592,7 +632,7 @@ window.claude = {
     return null;
   },
   hasKey: function () { return !!getKey(); },
-  keyHint: keyHint, setKey: setKey, clearKey: function () { setKey(''); },
+  keyHint: keyHint, setKey: setKey, clearKey: function () { setKey(''); clearCompat(); }, errDetail: errDetail,
   testKey: testKey, models: models, setModels: setModels,
   needsInstallHint: needsInstallHint, dismissInstallHint: dismissInstallHint,
   backup: async function () { var d = await getDb(); if (!d) throw {code: 'unavailable'}; return d.backup(); },
@@ -944,6 +984,12 @@ function subscribe(){
 }
 
 /* ================= analysis flow ================= */
+function apiDetail(e, code){
+  if (!e || !e.detail || ['rate_limited', 'overloaded', 'network', 'timeout', 'cancelled'].indexOf(code) >= 0) return '';
+  var d = String(e.detail);
+  if (e.detail2 && e.detail2 !== e.detail) d += ' | after retrying with a simpler request: ' + e.detail2;
+  return d.slice(0, 420);
+}
 function errMsg(code){
   return ({
     not_granted: 'Claude access was declined, so photos can\u2019t be analyzed. Reopen this page and tap Allow.',
@@ -962,7 +1008,9 @@ function errMsg(code){
     overloaded: 'Claude is overloaded right now. Try again in a moment.',
     network: 'No connection to Anthropic. Check your internet and retry.',
     timeout: 'That took too long. Try again.',
-    bad_request: 'Anthropic could not process that request. Try again, or use a different photo.'
+    bad_request: 'Anthropic could not process that request. The reason it gave is below.',
+    usage_limit: 'You have reached the spend limit set on your Anthropic account. Raise it in the Console under Limits, or wait for it to reset.',
+    account: 'Your Anthropic account looks disabled or inactive. Check the Console.'
   })[code] || 'Something interrupted the analysis. Try again.';
 }
 function dbMsg(e){
@@ -1010,7 +1058,7 @@ async function analyze(input){
     if (code !== 'cancelled') {
       if (code === 'not_granted') { S.denied = true; S.caps.sample = null; }
       if (code === 'images_unavailable') S.caps.img = null;
-      S.failed = {kind: 'analyze', code: code, message: errMsg(code), input: input, canRetry: ['not_granted', 'sampling_disabled', 'images_unavailable', 'session_expired', 'no_key', 'bad_key', 'bad_model'].indexOf(code) < 0};
+      S.failed = {kind: 'analyze', code: code, message: errMsg(code), detail: apiDetail(e, code), input: input, canRetry: ['not_granted', 'sampling_disabled', 'images_unavailable', 'session_expired', 'no_key', 'bad_key', 'bad_model'].indexOf(code) < 0};
     }
     render(); return;
   }
@@ -1177,7 +1225,7 @@ function failHTML(){
   if (f.kind === 'analyze' && ['no_key', 'bad_key', 'bad_model'].indexOf(f.code) >= 0) acts += '<button class="btn pri" data-act="open-key">Open settings</button>';
   if (f.kind === 'analyze' || f.kind === 'notfood') acts += '<button class="btn" data-act="fail-manual">Log it manually</button>';
   acts += '<button class="btn" data-act="dismiss">Dismiss</button>';
-  return '<div class="card fail"><div class="btxt"><b>Didn\u2019t go through</b><span>' + esc(f.message) + '</span><div class="acts">' + acts + '</div></div></div>';
+  return '<div class="card fail"><div class="btxt"><b>Didn\u2019t go through</b><span>' + esc(f.message) + '</span>' + (f.detail ? '<code class="det">' + esc(f.detail) + '</code>' : '') + '<div class="acts">' + acts + '</div></div></div>';
 }
 function todayHTML(){
   var key = dayKey(Date.now());
@@ -1345,7 +1393,7 @@ async function saveKeyAndTest(){
   if (!cl.hasKey()) { S.keyMsg = 'Paste your API key first.'; renderSheet(); return; }
   S.keyBusy = true; S.keyMsg = 'Testing\u2026'; render();
   var r = await cl.testKey();
-  S.keyBusy = false; S.keyMsg = r.ok ? 'Key works. Photo analysis is on.' : errMsg(r.code); render();
+  S.keyBusy = false; S.keyMsg = r.ok ? 'Key works. Photo analysis is on.' : errMsg(r.code) + (r.detail && ['rate_limited', 'overloaded', 'network', 'timeout'].indexOf(r.code) < 0 ? ' ' + r.detail : ''); render();
 }
 async function doBackup(){
   var cl = window.claude, dl = S.caps.downloads; if (!cl || !cl.backup || !dl) return;
